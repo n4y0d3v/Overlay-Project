@@ -10,11 +10,12 @@ app.get('/overlay/:id', (req, res) => {
 });
 
 io.on('connection', (socket) => {
+  console.log('A user connected');
   socket.on('customize', (data) => {
-    io.to(data.id).emit('update', data);
+    io.emit('update', data); // Broadcast all overlay updates
   });
-  socket.on('join', (id) => {
-    socket.join(id);
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
   });
 });
 

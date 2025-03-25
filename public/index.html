@@ -33,6 +33,11 @@
       flex-shrink: 0;
       transition: background 0.3s, border-bottom-color 0.3s;
     }
+    .title-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
     .title-bar h1 {
       font-size: 20px;
       font-weight: 600;
@@ -45,7 +50,7 @@
       align-items: center;
       gap: 12px;
     }
-    #darkModeToggle, #copyOverlayUrl {
+    #darkModeToggle, #copyOverlayUrl, #mainToggleOverlays, .toggle-overlay {
       background: none;
       border: 1px solid #d0d0d0;
       padding: 4px 8px;
@@ -58,7 +63,7 @@
       gap: 4px;
       transition: background 0.2s, color 0.3s, border-color 0.3s;
     }
-    #darkModeToggle:hover, #copyOverlayUrl:hover {
+    #darkModeToggle:hover, #copyOverlayUrl:hover, #mainToggleOverlays:hover, .toggle-overlay:hover {
       background: #f0f0f0;
     }
     .content {
@@ -147,10 +152,6 @@
     button:hover { 
       background: #0056b3;
     }
-    button:disabled { 
-      background: #b0b0b0;
-      cursor: not-allowed;
-    }
     #preview {
       position: relative;
       width: 720px;
@@ -173,10 +174,10 @@
       max-width: 100%;
       max-height: 100%;
       aspect-ratio: 16 / 9;
-      background: #fff; /* Unaffected by dark mode */
+      background: #fff;
       position: relative;
     }
-    #previewOverlay {
+    .overlay {
       position: absolute;
       cursor: move;
       transition: none;
@@ -232,11 +233,11 @@
     .dark-mode .title-bar h1 {
       color: #eee;
     }
-    .dark-mode #darkModeToggle, .dark-mode #copyOverlayUrl {
+    .dark-mode #darkModeToggle, .dark-mode #copyOverlayUrl, .dark-mode #mainToggleOverlays, .dark-mode .toggle-overlay {
       color: #aaa;
       border-color: #444;
     }
-    .dark-mode #darkModeToggle:hover, .dark-mode #copyOverlayUrl:hover {
+    .dark-mode #darkModeToggle:hover, .dark-mode #copyOverlayUrl:hover, .dark-mode #mainToggleOverlays:hover, .dark-mode .toggle-overlay:hover {
       background: #333;
     }
     .dark-mode h2 {
@@ -259,9 +260,6 @@
     .dark-mode button:hover {
       background: #1c86ee;
     }
-    .dark-mode button:disabled {
-      background: #555;
-    }
     .dark-mode #preview {
       background: #2c2c2c;
       border-color: #444;
@@ -273,7 +271,7 @@
       scrollbar-color: #666 #2a2a2a;
     }
     .dark-mode #controlsContainer::-webkit-scrollbar-thumb {
-      background h2: #666;
+      background: #666;
     }
     .dark-mode #controlsContainer::-webkit-scrollbar-track {
       background: #2a2a2a;
@@ -296,7 +294,12 @@
 <body>
   <div class="container">
     <div class="title-bar">
-      <h1>Create Your Overlay</h1>
+      <div class="title-bar-left">
+        <h1>Create Your Overlay</h1>
+        <button id="mainToggleOverlays" onclick="toggleAllOverlays()">
+          <i class="fas fa-eye"></i> Toggle All
+        </button>
+      </div>
       <div class="title-bar-actions">
         <button id="copyOverlayUrl" title="Copy Overlay URL" onclick="copyOverlayUrl()">
           <i class="fas fa-copy"></i> Copy URL
@@ -332,7 +335,9 @@
             <input type="checkbox" id="bibleBgTransparent">
           </div>
           <div class="control-group">
-            <button id="bibleGenerateBtn" onclick="generateOverlay('bible')"><i class="fas fa-play"></i> Generate</button>
+            <button class="toggle-overlay" id="toggleBible" onclick="toggleOverlay('bible')">
+              <i class="fas fa-eye"></i> Toggle
+            </button>
           </div>
           <div class="control-group">
             <button onclick="resetOverlay('bible')"><i class="fas fa-undo"></i> Reset</button>
@@ -363,7 +368,9 @@
             <input type="checkbox" id="lyricsBgTransparent">
           </div>
           <div class="control-group">
-            <button id="lyricsGenerateBtn" onclick="generateOverlay('lyrics')"><i class="fas fa-play"></i> Generate</button>
+            <button class="toggle-overlay" id="toggleLyrics" onclick="toggleOverlay('lyrics')">
+              <i class="fas fa-eye"></i> Toggle
+            </button>
           </div>
           <div class="control-group">
             <button onclick="resetOverlay('lyrics')"><i class="fas fa-undo"></i> Reset</button>
@@ -398,7 +405,9 @@
             <input type="checkbox" id="presenterBgTransparent">
           </div>
           <div class="control-group">
-            <button id="presenterGenerateBtn" onclick="generateOverlay('presenter')"><i class="fas fa-play"></i> Generate</button>
+            <button class="toggle-overlay" id="togglePresenter" onclick="toggleOverlay('presenter')">
+              <i class="fas fa-eye"></i> Toggle
+            </button>
           </div>
           <div class="control-group">
             <button onclick="resetOverlay('presenter')"><i class="fas fa-undo"></i> Reset</button>
@@ -429,7 +438,9 @@
             <input type="checkbox" id="tickerBgTransparent">
           </div>
           <div class="control-group">
-            <button id="tickerGenerateBtn" onclick="generateOverlay('ticker')"><i class="fas fa-play"></i> Generate</button>
+            <button class="toggle-overlay" id="toggleTicker" onclick="toggleOverlay('ticker')">
+              <i class="fas fa-eye"></i> Toggle
+            </button>
           </div>
           <div class="control-group">
             <button onclick="resetOverlay('ticker')"><i class="fas fa-undo"></i> Reset</button>
@@ -444,7 +455,9 @@
             <input type="file" id="imageInput" accept=".png">
           </div>
           <div class="control-group">
-            <button id="imageGenerateBtn" onclick="generateOverlay('image')"><i class="fas fa-play"></i> Generate</button>
+            <button class="toggle-overlay" id="toggleImage" onclick="toggleOverlay('image')">
+              <i class="fas fa-eye"></i> Toggle
+            </button>
           </div>
           <div class="control-group">
             <button onclick="resetOverlay('image')"><i class="fas fa-undo"></i> Reset</button>
@@ -453,9 +466,7 @@
       </div>
       <div id="resizeHandle"></div>
       <div id="preview">
-        <div id="previewCanvas">
-          <div id="previewOverlay"></div>
-        </div>
+        <div id="previewCanvas"></div>
       </div>
     </div>
   </div>
@@ -466,6 +477,15 @@
     let overlayId = null;
     const API_KEY = 'YOUR_API_KEY'; // Replace with your API.Bible key
     const BIBLE_ID = 'de4e12af7f28f599-01'; // KJV
+    const overlayTypes = ['bible', 'lyrics', 'presenter', 'ticker', 'image'];
+    const overlayStates = {
+      bible: false,
+      lyrics: false,
+      presenter: false,
+      ticker: false,
+      image: false
+    };
+    const overlayElements = {};
 
     const bookMap = {
       'genesis': 'GEN', 'gen': 'GEN',
@@ -509,9 +529,7 @@
       }
     }
 
-    async function generateOverlay(type) {
-      const generateBtn = document.getElementById(`${type}GenerateBtn`);
-      generateBtn.disabled = true;
+    async function updateOverlay(type) {
       overlayId = overlayId || Math.random().toString(36).substring(2, 7);
       const data = { id: overlayId, type };
 
@@ -523,7 +541,7 @@
             data.image = reader.result;
             applyPosition(data);
             socket.emit('customize', data);
-            updatePreview(data);
+            if (overlayStates[type]) renderOverlay(data);
           };
           reader.readAsDataURL(file);
         }
@@ -536,7 +554,7 @@
           data.text = document.getElementById('presenterText').value;
           applyPosition(data);
           socket.emit('customize', data);
-          updatePreview(data);
+          if (overlayStates[type]) renderOverlay(data);
         } else if (type === 'bible') {
           const reference = document.getElementById('bibleText').value;
           const bibleData = await fetchBibleText(reference);
@@ -544,16 +562,101 @@
           data.ref = bibleData.ref;
           applyPosition(data);
           socket.emit('customize', data);
-          updatePreview(data);
+          if (overlayStates[type]) renderOverlay(data);
         } else {
           data.text = document.getElementById(`${type}Text`).value;
           applyPosition(data);
           socket.emit('customize', data);
-          updatePreview(data);
+          if (overlayStates[type]) renderOverlay(data);
         }
       }
+    }
 
-      setTimeout(() => generateBtn.disabled = false, 1000);
+    function applyPosition(data) {
+      const overlay = overlayElements[data.type] || document.createElement('div');
+      data.position = {
+        left: overlay.style.left || '0px',
+        top: overlay.style.top || `${Object.keys(overlayElements).length * 50}px` // Stack vertically by default
+      };
+    }
+
+    function renderOverlay(data) {
+      const previewCanvas = document.getElementById('previewCanvas');
+      let overlay = overlayElements[data.type];
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = `overlay-${data.type}`;
+        overlay.className = 'overlay';
+        overlayElements[data.type] = overlay;
+        previewCanvas.appendChild(overlay);
+      }
+
+      overlay.style.left = data.position?.left || '0px';
+      overlay.style.top = data.position?.top || '0px';
+
+      if (data.type === 'bible') {
+        overlay.style.width = '800px';
+        overlay.style.height = '200px';
+        overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 20px">${data.text}<br><small>${data.ref}</small></div>`;
+      } else if (data.type === 'lyrics') {
+        overlay.style.width = '600px';
+        overlay.style.height = '200px';
+        overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 20px">${data.text}</div>`;
+      } else if (data.type === 'presenter') {
+        overlay.style.width = '200px';
+        overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 5px 10px">${data.title}</div><div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 10px">${data.text}</div>`;
+      } else if (data.type === 'ticker') {
+        overlay.style.width = '100%';
+        overlay.style.height = '35px';
+        overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; white-space: nowrap; animation: scroll 10s linear infinite">${data.text}</div>`;
+        overlay.innerHTML += `<style>@keyframes scroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); }}</style>`;
+      } else if (data.type === 'image') {
+        overlay.innerHTML = `<img src="${data.image}" style="width: 200px; height: 200px;">`;
+      }
+
+      setupOverlayDragging(overlay, data.type);
+    }
+
+    function toggleOverlay(type) {
+      overlayStates[type] = !overlayStates[type];
+      const toggleBtn = document.getElementById(`toggle${type.charAt(0).toUpperCase() + type.slice(1)}`);
+      toggleBtn.innerHTML = `<i class="fas fa-${overlayStates[type] ? 'eye' : 'eye-slash'}"></i> Toggle`;
+      if (overlayStates[type]) {
+        updateOverlay(type);
+      } else {
+        const overlay = overlayElements[type];
+        if (overlay) {
+          overlay.remove();
+          delete overlayElements[type];
+        }
+      }
+      updateMainToggleState();
+    }
+
+    function toggleAllOverlays() {
+      const allVisible = Object.values(overlayStates).every(state => state);
+      overlayTypes.forEach(type => {
+        overlayStates[type] = !allVisible;
+        const toggleBtn = document.getElementById(`toggle${type.charAt(0).toUpperCase() + type.slice(1)}`);
+        toggleBtn.innerHTML = `<i class="fas fa-${overlayStates[type] ? 'eye' : 'eye-slash'}"></i> Toggle`;
+        if (overlayStates[type]) {
+          updateOverlay(type);
+        } else {
+          const overlay = overlayElements[type];
+          if (overlay) {
+            overlay.remove();
+            delete overlayElements[type];
+          }
+        }
+      });
+      updateMainToggleState();
+    }
+
+    function updateMainToggleState() {
+      const allVisible = Object.values(overlayStates).every(state => state);
+      const noneVisible = Object.values(overlayStates).every(state => !state);
+      const mainToggleBtn = document.getElementById('mainToggleOverlays');
+      mainToggleBtn.innerHTML = `<i class="fas fa-${allVisible ? 'eye-slash' : 'eye'}"></i> Toggle All`;
     }
 
     function copyOverlayUrl() {
@@ -595,85 +698,48 @@
       } else if (type === 'image') {
         document.getElementById('imageInput').value = '';
       }
-      generateOverlay(type);
+      if (overlayStates[type]) updateOverlay(type);
     }
 
-    function applyPosition(data) {
-      const overlay = document.getElementById('previewOverlay');
-      data.position = {
-        left: overlay.style.left || '0px',
-        top: overlay.style.top || '0px'
-      };
+    function setupOverlayDragging(overlay, type) {
+      let isDragging = false;
+      let initialX, initialY, overlayX, overlayY;
+
+      overlay.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        overlayX = parseInt(overlay.style.left) || 0;
+        overlayY = parseInt(overlay.style.top) || 0;
+        initialX = e.clientX - overlayX;
+        initialY = e.clientY - overlayY;
+        overlay.style.transition = 'none';
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+          e.preventDefault();
+          overlayX = e.clientX - initialX;
+          overlayY = e.clientY - initialY;
+
+          const previewCanvas = document.getElementById('previewCanvas');
+          const maxX = previewCanvas.offsetWidth - overlay.offsetWidth;
+          const maxY = previewCanvas.offsetHeight - overlay.offsetHeight;
+          overlayX = Math.max(0, Math.min(overlayX, maxX));
+          overlayY = Math.max(0, Math.min(overlayY, maxY));
+
+          overlay.style.left = `${overlayX}px`;
+          overlay.style.top = `${overlayY}px`;
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isDragging) {
+          isDragging = false;
+          overlay.style.transition = 'all 0.3s ease';
+          const data = { id: overlayId, type, position: { left: overlay.style.left, top: overlay.style.top } };
+          socket.emit('customize', data);
+        }
+      });
     }
-
-    function updatePreview(data) {
-      const preview = document.getElementById('previewOverlay');
-      preview.innerHTML = '';
-      preview.style.position = 'absolute';
-      preview.style.left = data.position?.left || '0px';
-      preview.style.top = data.position?.top || '0px';
-
-      if (data.type === 'bible') {
-        preview.style.width = '800px';
-        preview.style.height = '200px';
-        preview.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 20px">${data.text}<br><small>${data.ref}</small></div>`;
-      } else if (data.type === 'lyrics') {
-        preview.style.width = '600px';
-        preview.style.height = '200px';
-        preview.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 20px">${data.text}</div>`;
-      } else if (data.type === 'presenter') {
-        preview.style.width = '200px';
-        preview.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 5px 10px">${data.title}</div><div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 10px">${data.text}</div>`;
-      } else if (data.type === 'ticker') {
-        preview.style.width = '100%';
-        preview.style.height = '35px';
-        preview.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; white-space: nowrap; animation: scroll 10s linear infinite">${data.text}</div>`;
-        preview.innerHTML += `<style>@keyframes scroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); }}</style>`;
-      } else if (data.type === 'image') {
-        preview.innerHTML = `<img src="${data.image}" style="width: 20px; height: 20px;">`;
-      }
-    }
-
-    // Drag-and-drop for overlay positioning
-    const previewOverlay = document.getElementById('previewOverlay');
-    let isDraggingOverlay = false;
-    let overlayX, overlayY, overlayInitialX, overlayInitialY;
-
-    previewOverlay.addEventListener('mousedown', (e) => {
-      isDraggingOverlay = true;
-      overlayInitialX = e.clientX - overlayX;
-      overlayInitialY = e.clientY - overlayY;
-      previewOverlay.style.transition = 'none';
-    });
-
-    document.addEventListener('mousemove', (e) => {
-      if (isDraggingOverlay) {
-        e.preventDefault();
-        overlayX = e.clientX - overlayInitialX;
-        overlayY = e.clientY - overlayInitialY;
-
-        const preview = document.getElementById('previewCanvas');
-        const maxX = preview.offsetWidth - previewOverlay.offsetWidth;
-        const maxY = preview.offsetHeight - previewOverlay.offsetHeight;
-        overlayX = Math.max(0, Math.min(overlayX, maxX));
-        overlayY = Math.max(0, Math.min(overlayY, maxY));
-
-        previewOverlay.style.left = `${overlayX}px`;
-        previewOverlay.style.top = `${overlayY}px`;
-      }
-    });
-
-    document.addEventListener('mouseup', () => {
-      if (isDraggingOverlay) {
-        isDraggingOverlay = false;
-        previewOverlay.style.transition = 'all 0.3s ease';
-        const type = overlayId ? document.querySelector(`button[id$="GenerateBtn"]:disabled`)?.id.replace('GenerateBtn', '') : 'bible';
-        if (type) generateOverlay(type);
-      }
-    });
-
-    overlayX = parseInt(previewOverlay.style.left) || 0;
-    overlayY = parseInt(previewOverlay.style.top) || 0;
 
     // Drag-to-resize controls and preview horizontally
     const resizeHandle = document.getElementById('resizeHandle');
@@ -726,21 +792,22 @@
     });
 
     // Event listeners for real-time updates
-    ['bible', 'lyrics', 'presenter', 'ticker'].forEach(type => {
-      document.getElementById(`${type}Text`)?.addEventListener('input', () => generateOverlay(type));
-      document.getElementById(`${type}FontColor`).addEventListener('input', () => generateOverlay(type));
-      document.getElementById(`${type}FontSize`).addEventListener('input', () => generateOverlay(type));
-      document.getElementById(`${type}BgColor`).addEventListener('input', () => generateOverlay(type));
-      document.getElementById(`${type}BgTransparent`).addEventListener('change', () => generateOverlay(type));
+    overlayTypes.forEach(type => {
+      document.getElementById(`${type}Text`)?.addEventListener('input', () => updateOverlay(type));
+      document.getElementById(`${type}FontColor`)?.addEventListener('input', () => updateOverlay(type));
+      document.getElementById(`${type}FontSize`)?.addEventListener('input', () => updateOverlay(type));
+      document.getElementById(`${type}BgColor`)?.addEventListener('input', () => updateOverlay(type));
+      document.getElementById(`${type}BgTransparent`)?.addEventListener('change', () => updateOverlay(type));
+      if (type === 'presenter') {
+        document.getElementById('presenterTitle').addEventListener('input', () => updateOverlay(type));
+      }
+      if (type === 'image') {
+        document.getElementById('imageInput').addEventListener('change', () => updateOverlay(type));
+      }
     });
-    document.getElementById('presenterTitle').addEventListener('input', () => generateOverlay('presenter'));
-    document.getElementById('imageInput').addEventListener('change', () => generateOverlay('image'));
 
-    resetOverlay('bible');
-    resetOverlay('lyrics');
-    resetOverlay('presenter');
-    resetOverlay('ticker');
-    resetOverlay('image');
+    // Initial reset
+    overlayTypes.forEach(type => resetOverlay(type));
   </script>
 </body>
 </html>
