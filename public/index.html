@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Overlay MVP</title>
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      transition: background 0.3s, color 0.3s;
+    }
+    .container {
+      background: #fff;
+      width: 100vw;
+      height: 100vh;
+      box-sizing: border-box;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: background 0.3s;
+    }
+    .title-bar {
+      background: #fff;
+      height: 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid #e0e0e0;
+      flex-shrink: 0;
+      transition: background 0.3s, border-bottom-color 0.3s;
+    }
+    .title-bar h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0;
+      color: #1a1a1a;
+      transition: color 0.3s;
+    }
+    .title-bar-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    #darkModeToggle, #copyOverlayUrl {
+      background: none;
+      border: 1px solid #d0d0d0;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      color: #666;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.2s, color 0.3s, border-color 0.3s;
+    }
+    #darkModeToggle:hover, #copyOverlayUrl:hover {
+      background: #f0f0f0;
+    }
+    .content {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 0;
+      flex: 1;
+      overflow: hidden;
+    }
+    h2 { 
+      font-size: 16px;
+      font-weight: 500;
+      margin: 16px 0 8px;
+      color: #444;
+      grid-column: 1 / -1;
+      transition: color 0.3s;
+    }
+    .overlay-section {
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 12px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px;
+      transition: border-bottom-color 0.3s;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      min-width: 120px;
+      margin: 4px 0;
+    }
+    label { 
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: #666;
+      transition: color 0.3s;
+    }
+    input[type="text"], input[type="number"] { 
+      width: 100%;
+      max-width: 120px;
+      padding: 6px 8px;
+      font-size: 13px;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      transition: border-color 0.2s, background 0.3s, color 0.3s;
+    }
+    input[type="text"]:focus, input[type="number"]:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+    input[type="color"] { 
+      width: 40px;
+      height: 28px;
+      padding: 0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    input[type="checkbox"] { 
+      margin-top: 4px;
+      accent-color: #007bff;
+    }
+    input[type="file"] { 
+      font-size: 12px;
+      padding: 4px 0;
+    }
+    button {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    button i {
+      font-size: 12px;
+    }
+    button:hover { 
+      background: #0056b3;
+    }
+    button:disabled { 
+      background: #b0b0b0;
+      cursor: not-allowed;
+    }
+    #preview {
+      position: relative;
+      width: 720px;
+      background: #e8ecef;
+      overflow: hidden;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      flex: 1;
+      min-width: 200px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+      max-height: calc(100vh - 48px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+    }
+    #previewCanvas {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      aspect-ratio: 16 / 9;
+      background: #fff; /* Unaffected by dark mode */
+      position: relative;
+    }
+    #previewOverlay {
+      position: absolute;
+      cursor: move;
+      transition: none;
+    }
+    #controlsContainer {
+      overflow-y: auto;
+      padding: 8px;
+      width: 300px;
+      min-width: 200px;
+      background: #fafafa;
+      border-right: 1px solid #e0e0e0;
+      box-sizing: border-box;
+      scrollbar-width: thin;
+      scrollbar-color: #bbb #fafafa;
+      transition: background 0.3s, border-right-color 0.3s;
+    }
+    #controlsContainer::-webkit-scrollbar {
+      width: 6px;
+    }
+    #controlsContainer::-webkit-scrollbar-thumb {
+      background: #bbb;
+      border-radius: 3px;
+      transition: background 0.3s;
+    }
+    #controlsContainer::-webkit-scrollbar-track {
+      background: #fafafa;
+      transition: background 0.3s;
+    }
+    #resizeHandle {
+      position: relative;
+      width: 8px;
+      background: #d0d0d0;
+      cursor: ew-resize;
+      border-radius: 4px;
+      z-index: 10;
+      transition: background 0.2s;
+    }
+    #resizeHandle:hover {
+      background: #bbb;
+    }
+
+    /* Dark Mode via Class */
+    body.dark-mode {
+      background: #1a1a1a;
+      color: #ddd;
+    }
+    .dark-mode .container, .dark-mode .title-bar {
+      background: #252525;
+    }
+    .dark-mode .title-bar {
+      border-bottom-color: #444;
+    }
+    .dark-mode .title-bar h1 {
+      color: #eee;
+    }
+    .dark-mode #darkModeToggle, .dark-mode #copyOverlayUrl {
+      color: #aaa;
+      border-color: #444;
+    }
+    .dark-mode #darkModeToggle:hover, .dark-mode #copyOverlayUrl:hover {
+      background: #333;
+    }
+    .dark-mode h2 {
+      color: #bbb;
+    }
+    .dark-mode label {
+      color: #aaa;
+    }
+    .dark-mode input[type="text"], .dark-mode input[type="number"] {
+      background: #333;
+      border-color: #444;
+      color: #ddd;
+    }
+    .dark-mode input[type="text"]:focus, .dark-mode input[type="number"]:focus {
+      border-color: #1e90ff;
+    }
+    .dark-mode button {
+      background: #1e90ff;
+    }
+    .dark-mode button:hover {
+      background: #1c86ee;
+    }
+    .dark-mode button:disabled {
+      background: #555;
+    }
+    .dark-mode #preview {
+      background: #2c2c2c;
+      border-color: #444;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .dark-mode #controlsContainer {
+      background: #2a2a2a;
+      border-right-color: #444;
+      scrollbar-color: #666 #2a2a2a;
+    }
+    .dark-mode #controlsContainer::-webkit-scrollbar-thumb {
+      background h2: #666;
+    }
+    .dark-mode #controlsContainer::-webkit-scrollbar-track {
+      background: #2a2a2a;
+    }
+    .dark-mode #resizeHandle {
+      background: #555;
+    }
+    .dark-mode #resizeHandle:hover {
+      background: #777;
+    }
+    .dark-mode .overlay-section {
+      border-bottom-color: #444;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="title-bar">
+      <h1>Create Your Overlay</h1>
+      <div class="title-bar-actions">
+        <button id="copyOverlayUrl" title="Copy Overlay URL" onclick="copyOverlayUrl()">
+          <i class="fas fa-copy"></i> Copy URL
+        </button>
+        <button id="darkModeToggle" onclick="toggleDarkMode()">
+          <i class="fas fa-adjust"></i> Toggle Dark Mode
+        </button>
+      </div>
+    </div>
+    <div class="content">
+      <div id="controlsContainer">
+        <!-- Bible Lower-Third -->
+        <div class="overlay-section">
+          <h2>Bible Lower-Third</h2>
+          <div class="control-group" data-tippy-content="Enter a Bible verse reference (e.g., John 3:16)">
+            <label for="bibleText">Verse Reference</label>
+            <input type="text" id="bibleText" placeholder="e.g., John 3:16" value="John 3:16" maxlength="50">
+          </div>
+          <div class="control-group" data-tippy-content="Select text color">
+            <label for="bibleFontColor">Font Color</label>
+            <input type="color" id="bibleFontColor" value="#ffffff">
+          </div>
+          <div class="control-group" data-tippy-content="Set font size in pixels (10-50)">
+            <label for="bibleFontSize">Font Size</label>
+            <input type="number" id="bibleFontSize" min="10" max="50" value="24">
+          </div>
+          <div class="control-group" data-tippy-content="Select background color">
+            <label for="bibleBgColor">Bg Color</label>
+            <input type="color" id="bibleBgColor" value="#333333">
+          </div>
+          <div class="control-group" data-tippy-content="Make background transparent">
+            <label for="bibleBgTransparent">Transparent</label>
+            <input type="checkbox" id="bibleBgTransparent">
+          </div>
+          <div class="control-group">
+            <button id="bibleGenerateBtn" onclick="generateOverlay('bible')"><i class="fas fa-play"></i> Generate</button>
+          </div>
+          <div class="control-group">
+            <button onclick="resetOverlay('bible')"><i class="fas fa-undo"></i> Reset</button>
+          </div>
+        </div>
+
+        <!-- Lyrics Lower-Third -->
+        <div class="overlay-section">
+          <h2>Lyrics Lower-Third</h2>
+          <div class="control-group" data-tippy-content="Enter lyrics text">
+            <label for="lyricsText">Lyrics</label>
+            <input type="text" id="lyricsText" placeholder="e.g., Amazing Grace..." value="Amazing Grace..." maxlength="50">
+          </div>
+          <div class="control-group" data-tippy-content="Select text color">
+            <label for="lyricsFontColor">Font Color</label>
+            <input type="color" id="lyricsFontColor" value="#ffffff">
+          </div>
+          <div class="control-group" data-tippy-content="Set font size in pixels (10-50)">
+            <label for="lyricsFontSize">Font Size</label>
+            <input type="number" id="lyricsFontSize" min="10" max="50" value="24">
+          </div>
+          <div class="control-group" data-tippy-content="Select background color">
+            <label for="lyricsBgColor">Bg Color</label>
+            <input type="color" id="lyricsBgColor" value="#333333">
+          </div>
+          <div class="control-group" data-tippy-content="Make background transparent">
+            <label for="lyricsBgTransparent">Transparent</label>
+            <input type="checkbox" id="lyricsBgTransparent">
+          </div>
+          <div class="control-group">
+            <button id="lyricsGenerateBtn" onclick="generateOverlay('lyrics')"><i class="fas fa-play"></i> Generate</button>
+          </div>
+          <div class="control-group">
+            <button onclick="resetOverlay('lyrics')"><i class="fas fa-undo"></i> Reset</button>
+          </div>
+        </div>
+
+        <!-- Presenter Lower-Third -->
+        <div class="overlay-section">
+          <h2>Presenter Lower-Third</h2>
+          <div class="control-group" data-tippy-content="Enter presenter title">
+            <label for="presenterTitle">Title</label>
+            <input type="text" id="presenterTitle" placeholder="e.g., Pastor" value="Pastor" maxlength="50">
+          </div>
+          <div class="control-group" data-tippy-content="Enter presenter name">
+            <label for="presenterText">Name</label>
+            <input type="text" id="presenterText" placeholder="e.g., John Doe" value="John Doe" maxlength="50">
+          </div>
+          <div class="control-group" data-tippy-content="Select text color">
+            <label for="presenterFontColor">Font Color</label>
+            <input type="color" id="presenterFontColor" value="#ffffff">
+          </div>
+          <div class="control-group" data-tippy-content="Set font size in pixels (10-50)">
+            <label for="presenterFontSize">Font Size</label>
+            <input type="number" id="presenterFontSize" min="10" max="50" value="24">
+          </div>
+          <div class="control-group" data-tippy-content="Select background color">
+            <label for="presenterBgColor">Bg Color</label>
+            <input type="color" id="presenterBgColor" value="#333333">
+          </div>
+          <div class="control-group" data-tippy-content="Make background transparent">
+            <label for="presenterBgTransparent">Transparent</label>
+            <input type="checkbox" id="presenterBgTransparent">
+          </div>
+          <div class="control-group">
+            <button id="presenterGenerateBtn" onclick="generateOverlay('presenter')"><i class="fas fa-play"></i> Generate</button>
+          </div>
+          <div class="control-group">
+            <button onclick="resetOverlay('presenter')"><i class="fas fa-undo"></i> Reset</button>
+          </div>
+        </div>
+
+        <!-- Ticker -->
+        <div class="overlay-section">
+          <h2>Ticker</h2>
+          <div class="control-group" data-tippy-content="Enter ticker text">
+            <label for="tickerText">Text</label>
+            <input type="text" id="tickerText" placeholder="e.g., Breaking News" value="Breaking News" maxlength="50">
+          </div>
+          <div class="control-group" data-tippy-content="Select text color">
+            <label for="tickerFontColor">Font Color</label>
+            <input type="color" id="tickerFontColor" value="#ffffff">
+          </div>
+          <div class="control-group" data-tippy-content="Set font size in pixels (10-50)">
+            <label for="tickerFontSize">Font Size</label>
+            <input type="number" id="tickerFontSize" min="10" max="50" value="24">
+          </div>
+          <div class="control-group" data-tippy-content="Select background color">
+            <label for="tickerBgColor">Bg Color</label>
+            <input type="color" id="tickerBgColor" value="#ff0000">
+          </div>
+          <div class="control-group" data-tippy-content="Make background transparent">
+            <label for="tickerBgTransparent">Transparent</label>
+            <input type="checkbox" id="tickerBgTransparent">
+          </div>
+          <div class="control-group">
+            <button id="tickerGenerateBtn" onclick="generateOverlay('ticker')"><i class="fas fa-play"></i> Generate</button>
+          </div>
+          <div class="control-group">
+            <button onclick="resetOverlay('ticker')"><i class="fas fa-undo"></i> Reset</button>
+          </div>
+        </div>
+
+        <!-- Image Upload -->
+        <div class="overlay-section">
+          <h2>Image Upload</h2>
+          <div class="control-group" data-tippy-content="Upload a PNG image">
+            <label for="imageInput">Upload PNG</label>
+            <input type="file" id="imageInput" accept=".png">
+          </div>
+          <div class="control-group">
+            <button id="imageGenerateBtn" onclick="generateOverlay('image')"><i class="fas fa-play"></i> Generate</button>
+          </div>
+          <div class="control-group">
+            <button onclick="resetOverlay('image')"><i class="fas fa-undo"></i> Reset</button>
+          </div>
+        </div>
+      </div>
+      <div id="resizeHandle"></div>
+      <div id="preview">
+        <div id="previewCanvas">
+          <div id="previewOverlay"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let overlayId = null;
+    const API_KEY = 'YOUR_API_KEY'; // Replace with your API.Bible key
+    const BIBLE_ID = 'de4e12af7f28f599-01'; // KJV
+
+    const bookMap = {
+      'genesis': 'GEN', 'gen': 'GEN',
+      'exodus': 'EXO', 'exo': 'EXO',
+      'john': 'JHN', 'jn': 'JHN',
+      'matthew': 'MAT', 'matt': 'MAT',
+      'mark': 'MRK', 'mk': 'MRK',
+      'luke': 'LUK', 'lk': 'LUK',
+    };
+
+    async function fetchBibleText(input) {
+      try {
+        const cleanedInput = input.replace(/\s+/g, ' ').trim().toLowerCase();
+        const rangeMatch = cleanedInput.match(/([a-zA-Z\s]+)\s*(\d+:\d+)(?:\s*[-–]\s*(\d+:\d+))?/);
+        const singleMatch = cleanedInput.match(/([a-zA-Z\s]+)\s*(\d+:\d+)/);
+
+        if (!singleMatch) {
+          return { text: input, ref: input };
+        }
+
+        let book = singleMatch[1].trim();
+        let startVerse = singleMatch[2];
+        let endVerse = rangeMatch && rangeMatch[3] ? rangeMatch[3] : null;
+
+        book = bookMap[book] || bookMap[book.replace(/\s/g, '')] || 'JHN';
+        const startRef = `${book}.${startVerse}`;
+        const apiRef = endVerse ? `${startRef}-${book}.${endVerse}` : startRef;
+
+        const response = await fetch(`https://api.scripture.api.bible/v1/bibles/${BIBLE_ID}/passages/${apiRef}?content-type=text`, {
+          headers: { 'api-key': API_KEY }
+        });
+
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+        const data = await response.json();
+        const text = data.data.content.replace(/\n/g, ' ').trim();
+        const ref = data.data.reference;
+        return { text, ref };
+      } catch (error) {
+        console.error('Error fetching Bible text:', error);
+        return { text: `Error: Invalid reference (${input})`, ref: input };
+      }
+    }
+
+    async function generateOverlay(type) {
+      const generateBtn = document.getElementById(`${type}GenerateBtn`);
+      generateBtn.disabled = true;
+      overlayId = overlayId || Math.random().toString(36).substring(2, 7);
+      const data = { id: overlayId, type };
+
+      if (type === 'image') {
+        const file = document.getElementById('imageInput').files[0];
+        if (file && file.type === 'image/png') {
+          const reader = new FileReader();
+          reader.onload = () => {
+            data.image = reader.result;
+            applyPosition(data);
+            socket.emit('customize', data);
+            updatePreview(data);
+          };
+          reader.readAsDataURL(file);
+        }
+      } else {
+        data.fontColor = document.getElementById(`${type}FontColor`).value;
+        data.fontSize = document.getElementById(`${type}FontSize`).value + 'px';
+        data.bgColor = document.getElementById(`${type}BgTransparent`).checked ? 'transparent' : document.getElementById(`${type}BgColor`).value;
+        if (type === 'presenter') {
+          data.title = document.getElementById('presenterTitle').value;
+          data.text = document.getElementById('presenterText').value;
+          applyPosition(data);
+          socket.emit('customize', data);
+          updatePreview(data);
+        } else if (type === 'bible') {
+          const reference = document.getElementById('bibleText').value;
+          const bibleData = await fetchBibleText(reference);
+          data.text = bibleData.text;
+          data.ref = bibleData.ref;
+          applyPosition(data);
+          socket.emit('customize', data);
+          updatePreview(data);
+        } else {
+          data.text = document.getElementById(`${type}Text`).value;
+          applyPosition(data);
+          socket.emit('customize', data);
+          updatePreview(data);
+        }
+      }
+
+      setTimeout(() => generateBtn.disabled = false, 1000);
+    }
+
+    function copyOverlayUrl() {
+      if (!overlayId) return;
+      const url = `${window.location.origin}/overlay/${overlayId}`;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Overlay URL copied to clipboard!');
+      }).catch(err => {
+        console.error('Failed to copy URL:', err);
+      });
+    }
+
+    function resetOverlay(type) {
+      if (type === 'bible') {
+        document.getElementById('bibleText').value = 'John 3:16';
+        document.getElementById('bibleFontColor').value = '#ffffff';
+        document.getElementById('bibleFontSize').value = '24';
+        document.getElementById('bibleBgColor').value = '#333333';
+        document.getElementById('bibleBgTransparent').checked = false;
+      } else if (type === 'lyrics') {
+        document.getElementById('lyricsText').value = 'Amazing Grace...';
+        document.getElementById('lyricsFontColor').value = '#ffffff';
+        document.getElementById('lyricsFontSize').value = '24';
+        document.getElementById('lyricsBgColor').value = '#333333';
+        document.getElementById('lyricsBgTransparent').checked = false;
+      } else if (type === 'presenter') {
+        document.getElementById('presenterTitle').value = 'Pastor';
+        document.getElementById('presenterText').value = 'John Doe';
+        document.getElementById('presenterFontColor').value = '#ffffff';
+        document.getElementById('presenterFontSize').value = '24';
+        document.getElementById('presenterBgColor').value = '#333333';
+        document.getElementById('presenterBgTransparent').checked = false;
+      } else if (type === 'ticker') {
+        document.getElementById('tickerText').value = 'Breaking News';
+        document.getElementById('tickerFontColor').value = '#ffffff';
+        document.getElementById('tickerFontSize').value = '24';
+        document.getElementById('tickerBgColor').value = '#ff0000';
+        document.getElementById('tickerBgTransparent').checked = false;
+      } else if (type === 'image') {
+        document.getElementById('imageInput').value = '';
+      }
+      generateOverlay(type);
+    }
+
+    function applyPosition(data) {
+      const overlay = document.getElementById('previewOverlay');
+      data.position = {
+        left: overlay.style.left || '0px',
+        top: overlay.style.top || '0px'
+      };
+    }
+
+    function updatePreview(data) {
+      const preview = document.getElementById('previewOverlay');
+      preview.innerHTML = '';
+      preview.style.position = 'absolute';
+      preview.style.left = data.position?.left || '0px';
+      preview.style.top = data.position?.top || '0px';
+
+      if (data.type === 'bible') {
+        preview.style.width = '800px';
+        preview.style.height = '200px';
+        preview.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 20px">${data.text}<br><small>${data.ref}</small></div>`;
+      } else if (data.type === 'lyrics') {
+        preview.style.width = '600px';
+        preview.style.height = '200px';
+        preview.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 20px">${data.text}</div>`;
+      } else if (data.type === 'presenter') {
+        preview.style.width = '200px';
+        preview.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 5px 10px">${data.title}</div><div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 10px">${data.text}</div>`;
+      } else if (data.type === 'ticker') {
+        preview.style.width = '100%';
+        preview.style.height = '35px';
+        preview.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; white-space: nowrap; animation: scroll 10s linear infinite">${data.text}</div>`;
+        preview.innerHTML += `<style>@keyframes scroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); }}</style>`;
+      } else if (data.type === 'image') {
+        preview.innerHTML = `<img src="${data.image}" style="width: 20px; height: 20px;">`;
+      }
+    }
+
+    // Drag-and-drop for overlay positioning
+    const previewOverlay = document.getElementById('previewOverlay');
+    let isDraggingOverlay = false;
+    let overlayX, overlayY, overlayInitialX, overlayInitialY;
+
+    previewOverlay.addEventListener('mousedown', (e) => {
+      isDraggingOverlay = true;
+      overlayInitialX = e.clientX - overlayX;
+      overlayInitialY = e.clientY - overlayY;
+      previewOverlay.style.transition = 'none';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (isDraggingOverlay) {
+        e.preventDefault();
+        overlayX = e.clientX - overlayInitialX;
+        overlayY = e.clientY - overlayInitialY;
+
+        const preview = document.getElementById('previewCanvas');
+        const maxX = preview.offsetWidth - previewOverlay.offsetWidth;
+        const maxY = preview.offsetHeight - previewOverlay.offsetHeight;
+        overlayX = Math.max(0, Math.min(overlayX, maxX));
+        overlayY = Math.max(0, Math.min(overlayY, maxY));
+
+        previewOverlay.style.left = `${overlayX}px`;
+        previewOverlay.style.top = `${overlayY}px`;
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isDraggingOverlay) {
+        isDraggingOverlay = false;
+        previewOverlay.style.transition = 'all 0.3s ease';
+        const type = overlayId ? document.querySelector(`button[id$="GenerateBtn"]:disabled`)?.id.replace('GenerateBtn', '') : 'bible';
+        if (type) generateOverlay(type);
+      }
+    });
+
+    overlayX = parseInt(previewOverlay.style.left) || 0;
+    overlayY = parseInt(previewOverlay.style.top) || 0;
+
+    // Drag-to-resize controls and preview horizontally
+    const resizeHandle = document.getElementById('resizeHandle');
+    const controlsContainer = document.getElementById('controlsContainer');
+    const preview = document.getElementById('preview');
+    let isResizing = false;
+    let initialX, initialControlsWidth;
+
+    resizeHandle.addEventListener('mousedown', (e) => {
+      isResizing = true;
+      initialX = e.clientX;
+      initialControlsWidth = controlsContainer.offsetWidth;
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (isResizing) {
+        e.preventDefault();
+        const deltaX = e.clientX - initialX;
+        const newControlsWidth = initialControlsWidth + deltaX;
+
+        const containerWidth = window.innerWidth - 32;
+        const minWidth = 200;
+        const maxControlsWidth = containerWidth - minWidth - 8;
+
+        controlsContainer.style.width = `${Math.max(minWidth, Math.min(newControlsWidth, maxControlsWidth))}px`;
+        preview.style.width = `${containerWidth - controlsContainer.offsetWidth - 8}px`;
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      isResizing = false;
+    });
+
+    // Dark Mode Toggle with LocalStorage
+    function toggleDarkMode() {
+      const isDark = document.body.classList.toggle('dark-mode');
+      localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+    }
+
+    // Initialize Dark Mode from LocalStorage
+    if (localStorage.getItem('darkMode') === 'enabled') {
+      document.body.classList.add('dark-mode');
+    }
+
+    // Tippy.js Initialization
+    tippy('.control-group[data-tippy-content]', {
+      theme: 'light',
+      placement: 'top',
+      arrow: true,
+    });
+
+    // Event listeners for real-time updates
+    ['bible', 'lyrics', 'presenter', 'ticker'].forEach(type => {
+      document.getElementById(`${type}Text`)?.addEventListener('input', () => generateOverlay(type));
+      document.getElementById(`${type}FontColor`).addEventListener('input', () => generateOverlay(type));
+      document.getElementById(`${type}FontSize`).addEventListener('input', () => generateOverlay(type));
+      document.getElementById(`${type}BgColor`).addEventListener('input', () => generateOverlay(type));
+      document.getElementById(`${type}BgTransparent`).addEventListener('change', () => generateOverlay(type));
+    });
+    document.getElementById('presenterTitle').addEventListener('input', () => generateOverlay('presenter'));
+    document.getElementById('imageInput').addEventListener('change', () => generateOverlay('image'));
+
+    resetOverlay('bible');
+    resetOverlay('lyrics');
+    resetOverlay('presenter');
+    resetOverlay('ticker');
+    resetOverlay('image');
+  </script>
+</body>
+</html>

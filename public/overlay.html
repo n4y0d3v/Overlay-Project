@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { background: transparent; margin: 0; overflow: hidden; }
+    #overlay { position: absolute; transition: opacity 0.3s ease; opacity: 1; }
+    .ticker { white-space: nowrap; animation: scroll 10s linear infinite; }
+    @keyframes scroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+  </style>
+</head>
+<body>
+  <div id="overlay"></div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const id = window.location.pathname.split('/').pop();
+    socket.emit('join', id);
+
+    socket.on('update', (data) => {
+      const overlay = document.getElementById('overlay');
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        overlay.innerHTML = '';
+        if (data.type === 'bible') {
+          overlay.style.bottom = '0';
+          overlay.style.left = '50%';
+          overlay.style.transform = 'translateX(-50%)';
+          overlay.style.width = '800px';
+          overlay.style.height = '200px';
+          overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 20px">${data.text}<br><small>${data.ref}</small></div>`;
+        } else if (data.type === 'lyrics') {
+          overlay.style.bottom = '0';
+          overlay.style.left = '50%';
+          overlay.style.transform = 'translateX(-50%)';
+          overlay.style.width = '600px';
+          overlay.style.height = '200px';
+          overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 20px">${data.text}</div>`;
+        } else if (data.type === 'presenter') {
+          overlay.style.bottom = '20px';
+          overlay.style.left = '20px';
+          overlay.style.width = '200px';
+          overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 5px 10px">${data.title}</div><div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 10px">${data.text}</div>`;
+        } else if (data.type === 'ticker') {
+          overlay.style.bottom = '0';
+          overlay.style.width = '100%';
+          overlay.style.height = '35px';
+          overlay.innerHTML = `<div class="ticker" style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}">${data.text}</div>`;
+        } else if (data.type === 'image') {
+          overlay.style.bottom = '20px';
+          overlay.style.left = '20px';
+          overlay.innerHTML = `<img src="${data.image}" style="width: 20px; height: 20px;">`;
+        }
+        overlay.style.opacity = '1';
+      }, 300);
+    });
+  </script>
+</body>
+</html>
