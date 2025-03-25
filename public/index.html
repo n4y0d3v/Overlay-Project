@@ -38,6 +38,13 @@
       align-items: center;
       gap: 12px;
     }
+    .title-bar-center {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+    }
     .title-bar h1 {
       font-size: 20px;
       font-weight: 600;
@@ -337,6 +344,8 @@
     <div class="title-bar">
       <div class="title-bar-left">
         <h1>Create Your Overlay</h1>
+      </div>
+      <div class="title-bar-center">
         <label class="switch">
           <input type="checkbox" id="mainToggleOverlays" onchange="toggleAllOverlays()">
           <span class="slider"></span>
