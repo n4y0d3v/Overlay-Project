@@ -110,7 +110,7 @@
       color: #666;
       transition: color 0.3s;
     }
-    input[type="text"], input[type="number"] { 
+    input[type="text"], input[type="number"], select { 
       width: 100%;
       max-width: 120px;
       padding: 6px 8px;
@@ -119,7 +119,7 @@
       border-radius: 4px;
       transition: border-color 0.2s, background 0.3s, color 0.3s;
     }
-    input[type="text"]:focus, input[type="number"]:focus {
+    input[type="text"]:focus, input[type="number"]:focus, select:focus {
       border-color: #007bff;
       outline: none;
     }
@@ -164,30 +164,51 @@
       width: 40%;
       background: #e8ecef;
       overflow: hidden;
-      border: 1px solid #d0d0d0;
+      border: 2px dashed #007bff;
       border-radius: 6px;
       flex: 1 1 40%;
       min-width: 200px;
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
       max-height: calc(100vh - 48px);
       display: flex;
       justify-content: center;
       align-items: center;
-      transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+      transition: border-color 0.3s, box-shadow 0.3s;
     }
-    #previewCanvas {
+    #preview:after {
+      content: "Output Preview";
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      font-size: 12px;
+      color: #007bff;
+      opacity: 0.7;
+    }
+    #outputCanvas {
       width: 100%;
-      height: 100%;
+      aspect-ratio: 16 / 9;
       max-width: 100%;
       max-height: 100%;
-      aspect-ratio: 16 / 9;
-      background: #fff;
+      background: #000;
       position: relative;
+      border: 2px solid #333;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
     }
     .overlay {
       position: absolute;
-      cursor: move;
       transition: none;
+    }
+    .live-indicator {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: #ff0000;
+      color: #fff;
+      padding: 5px 10px;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 4px;
     }
     #controlsContainer {
       overflow-y: auto;
@@ -294,12 +315,12 @@
     .dark-mode label {
       color: #aaa;
     }
-    .dark-mode input[type="text"], .dark-mode input[type="number"] {
+    .dark-mode input[type="text"], .dark-mode input[type="number"], .dark-mode select {
       background: #333;
       border-color: #444;
       color: #ddd;
     }
-    .dark-mode input[type="text"]:focus, .dark-mode input[type="number"]:focus {
+    .dark-mode input[type="text"]:focus, .dark-mode input[type="number"]:focus, .dark-mode select:focus {
       border-color: #1e90ff;
     }
     .dark-mode button {
@@ -310,8 +331,10 @@
     }
     .dark-mode #preview {
       background: #2c2c2c;
-      border-color: #444;
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+      border-color: #1e90ff;
+    }
+    .dark-mode #preview:after {
+      color: #1e90ff;
     }
     .dark-mode #controlsContainer {
       background: #2a2a2a;
@@ -343,7 +366,7 @@
   <div class="container">
     <div class="title-bar">
       <div class="title-bar-left">
-        <h1>Create Your Overlay</h1>
+        <h2>Create Your Overlay</h2>
       </div>
       <div class="title-bar-center">
         <label class="switch">
@@ -471,25 +494,41 @@
         <!-- Ticker -->
         <div class="overlay-section">
           <h2>Ticker</h2>
-          <div class="control-group" data-tippy-content="Enter ticker text">
-            <label for="tickerText">Text</label>
-            <input type="text" id="tickerText" placeholder="e.g., Breaking News" value="Breaking News" maxlength="50">
+          <div class="control-group" data-tippy-content="Enter ticker title">
+            <label for="tickerTitle">Title</label>
+            <input type="text" id="tickerTitle" placeholder="e.g., News" value="News" maxlength="50">
           </div>
-          <div class="control-group" data-tippy-content="Select text color">
-            <label for="tickerFontColor">Font Color</label>
+          <div class="control-group" data-tippy-content="Enter ticker content">
+            <label for="tickerText">Content</label>
+            <input type="text" id="tickerText" placeholder="e.g., Breaking News" value="Breaking News" maxlength="950">
+          </div>
+          <div class="control-group" data-tippy-content="Select title text color">
+            <label for="tickerTitleFontColor">Title Font Color</label>
+            <input type="color" id="tickerTitleFontColor" value="#000000">
+          </div>
+          <div class="control-group" data-tippy-content="Select content text color">
+            <label for="tickerFontColor">Content Font Color</label>
             <input type="color" id="tickerFontColor" value="#ffffff">
           </div>
           <div class="control-group" data-tippy-content="Set font size in pixels (10-50)">
             <label for="tickerFontSize">Font Size</label>
-            <input type="number" id="tickerFontSize" min="10" max="50" value="24">
+            <input type="number" id="tickerFontSize" min="10" max="50" value="14">
           </div>
-          <div class="control-group" data-tippy-content="Select background color">
-            <label for="tickerBgColor">Bg Color</label>
+          <div class="control-group" data-tippy-content="Select content background color">
+            <label for="tickerBgColor">Content Bg Color</label>
             <input type="color" id="tickerBgColor" value="#ff0000">
           </div>
-          <div class="control-group" data-tippy-content="Make background transparent">
+          <div class="control-group" data-tippy-content="Make content background transparent">
             <label for="tickerBgTransparent">Transparent</label>
             <input type="checkbox" id="tickerBgTransparent">
+          </div>
+          <div class="control-group" data-tippy-content="Set content scroll speed in pixels per second (10-100)">
+            <label for="tickerScrollSpeed">Scroll Speed (px/s)</label>
+            <input type="number" id="tickerScrollSpeed" min="10" max="100" value="50">
+          </div>
+          <div class="control-group" data-tippy-content="Toggle title blink animation">
+            <label for="tickerTitleBlink">Blink Title</label>
+            <input type="checkbox" id="tickerTitleBlink">
           </div>
           <div class="control-group">
             <label class="switch">
@@ -522,7 +561,9 @@
       </div>
       <div id="resizeHandle"></div>
       <div id="preview">
-        <div id="previewCanvas"></div>
+        <div id="outputCanvas">
+          <div class="live-indicator">LIVE</div>
+        </div>
       </div>
     </div>
   </div>
@@ -585,7 +626,7 @@
       }
     }
 
-    async function updateOverlay(type) {
+    function updateOverlay(type) {
       overlayId = overlayId || Math.random().toString(36).substring(2, 7);
       const data = { id: overlayId, type };
 
@@ -595,7 +636,6 @@
           const reader = new FileReader();
           reader.onload = () => {
             data.image = reader.result;
-            applyPosition(data);
             socket.emit('customize', data);
             if (overlayStates[type]) renderOverlay(data);
           };
@@ -608,75 +648,138 @@
         if (type === 'presenter') {
           data.title = document.getElementById('presenterTitle').value;
           data.text = document.getElementById('presenterText').value;
-          applyPosition(data);
           socket.emit('customize', data);
           if (overlayStates[type]) renderOverlay(data);
         } else if (type === 'bible') {
           const reference = document.getElementById('bibleText').value;
-          const bibleData = await fetchBibleText(reference);
-          data.text = bibleData.text;
-          data.ref = bibleData.ref;
-          applyPosition(data);
+          fetchBibleText(reference).then(bibleData => {
+            data.text = bibleData.text;
+            data.ref = bibleData.ref;
+            socket.emit('customize', data);
+            if (overlayStates[type]) renderOverlay(data);
+          });
+        } else if (type === 'ticker') {
+          data.title = document.getElementById('tickerTitle').value;
+          data.text = document.getElementById('tickerText').value;
+          data.titleFontColor = document.getElementById('tickerTitleFontColor').value;
+          data.titleBlink = document.getElementById('tickerTitleBlink').checked;
+          data.scrollSpeed = parseInt(document.getElementById('tickerScrollSpeed').value, 10);
+          const totalLength = data.title.length + data.text.length;
+          if (totalLength > 1000) {
+            data.text = data.text.substring(0, 1000 - data.title.length);
+          }
           socket.emit('customize', data);
           if (overlayStates[type]) renderOverlay(data);
         } else {
           data.text = document.getElementById(`${type}Text`).value;
-          applyPosition(data);
           socket.emit('customize', data);
           if (overlayStates[type]) renderOverlay(data);
         }
       }
     }
 
-    function applyPosition(data) {
-      const overlay = overlayElements[data.type] || document.createElement('div');
-      data.position = {
-        left: overlay.style.left || '0px',
-        top: overlay.style.top || `${Object.keys(overlayElements).length * 50}px` // Stack vertically by default
-      };
-    }
-
     function renderOverlay(data) {
-      const previewCanvas = document.getElementById('previewCanvas');
+      const outputCanvas = document.getElementById('outputCanvas');
       let overlay = overlayElements[data.type];
       if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = `overlay-${data.type}`;
         overlay.className = 'overlay';
         overlayElements[data.type] = overlay;
-        previewCanvas.appendChild(overlay);
+        outputCanvas.appendChild(overlay);
       }
 
-      overlay.style.left = data.position?.left || '0px';
-      overlay.style.top = data.position?.top || '0px';
-
-      if (data.type === 'bible') {
-        overlay.style.width = '800px';
-        overlay.style.height = '200px';
-        overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 20px">${data.text}<br><small>${data.ref}</small></div>`;
-      } else if (data.type === 'lyrics') {
-        overlay.style.width = '600px';
-        overlay.style.height = '200px';
-        overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 20px">${data.text}</div>`;
-      } else if (data.type === 'presenter') {
-        overlay.style.width = '200px';
-        overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 5px 10px">${data.title}</div><div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 10px">${data.text}</div>`;
-      } else if (data.type === 'ticker') {
+      if (data.type === 'ticker') {
+        overlay.style.bottom = '5px';
+        overlay.style.left = '0';
         overlay.style.width = '100%';
-        overlay.style.height = '35px';
-        overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; white-space: nowrap; animation: scroll 10s linear infinite">${data.text}</div>`;
-        overlay.innerHTML += `<style>@keyframes scroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); }}</style>`;
+        // Dynamic height based on font size (fontSize in pixels + padding)
+        const fontSizePx = parseInt(data.fontSize, 10);
+        const tickerHeight = fontSizePx + 8; // Add 8px for padding (2px top + 2px bottom + extra buffer)
+        overlay.style.height = `${tickerHeight}px`;
+        overlay.style.overflow = 'hidden';
+        overlay.style.display = 'flex';
+
+        // Create a temporary element to measure the content width
+        const tempDiv = document.createElement('div');
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.visibility = 'hidden';
+        tempDiv.style.whiteSpace = 'nowrap';
+        tempDiv.style.fontSize = data.fontSize;
+        tempDiv.textContent = data.text + ' • ';
+        document.body.appendChild(tempDiv);
+        const textWidth = tempDiv.offsetWidth;
+        document.body.removeChild(tempDiv);
+
+        // Calculate the content container width (85% of the ticker)
+        const contentContainerWidth = outputCanvas.offsetWidth * 0.85;
+        // Calculate the number of repetitions needed to fill at least twice the container width for seamless scrolling
+        const minRepetitions = Math.ceil((contentContainerWidth * 2) / textWidth);
+        const repeatedText = (data.text + ' • ').repeat(Math.max(minRepetitions, 2));
+
+        // Create a second temporary element to measure the repeated content width
+        const tempDivRepeated = document.createElement('div');
+        tempDivRepeated.style.position = 'absolute';
+        tempDivRepeated.style.visibility = 'hidden';
+        tempDivRepeated.style.whiteSpace = 'nowrap';
+        tempDivRepeated.style.fontSize = data.fontSize;
+        tempDivRepeated.textContent = repeatedText;
+        document.body.appendChild(tempDivRepeated);
+        const repeatedTextWidth = tempDivRepeated.offsetWidth;
+        document.body.removeChild(tempDivRepeated);
+
+        // Calculate animation duration based on scroll speed (pixels per second)
+        const scrollSpeedPxPerSec = data.scrollSpeed; // pixels per second
+        const animationDuration = repeatedTextWidth / scrollSpeedPxPerSec; // seconds
+
+        overlay.innerHTML = `
+          <div style="width: 15%; height: 100%; background: #ffffff; font-size: ${data.fontSize}; padding: 2px 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <span style="color: ${data.titleFontColor}; ${data.titleBlink ? 'animation: blink 1s step-end infinite;' : ''}">
+              ${data.title}
+            </span>
+          </div>
+          <div style="width: 85%; height: 100%; background: ${data.bgColor}; position: relative; overflow: hidden;">
+            <div id="tickerContent-${data.id}" style="color: ${data.fontColor}; font-size: ${data.fontSize}; white-space: nowrap; animation: scroll ${animationDuration}s linear infinite; padding: 2px 10px; display: inline-block; position: absolute; top: 0; left: 0;">
+              ${repeatedText}
+            </div>
+          </div>
+        `;
+        overlay.innerHTML += `
+          <style>
+            @keyframes scroll {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-${repeatedTextWidth}px); }
+            }
+            @keyframes blink {
+              50% { opacity: 0; }
+            }
+          </style>
+        `;
+      } else if (data.type === 'bible' || data.type === 'lyrics' || data.type === 'presenter') {
+        overlay.style.bottom = '80px';
+        overlay.style.left = '20px';
+        if (data.type === 'bible') {
+          overlay.style.width = '800px';
+          overlay.style.height = '200px';
+          overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 20px">${data.text}<br><small>${data.ref}</small></div>`;
+        } else if (data.type === 'lyrics') {
+          overlay.style.width = '600px';
+          overlay.style.height = '200px';
+          overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 20px">${data.text}</div>`;
+        } else if (data.type === 'presenter') {
+          overlay.style.width = '300px';
+          overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 5px 10px">${data.title}</div><div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 10px">${data.text}</div>`;
+        }
       } else if (data.type === 'image') {
+        overlay.style.left = '20px';
+        overlay.style.top = '20px';
         overlay.innerHTML = `<img src="${data.image}" style="width: 200px; height: 200px;">`;
       }
-
-      setupOverlayDragging(overlay, data.type);
     }
 
     function toggleOverlay(type) {
-      overlayStates[type] = !overlayStates[type];
       const toggleSwitch = document.getElementById(`toggle${type.charAt(0).toUpperCase() + type.slice(1)}`);
-      toggleSwitch.checked = overlayStates[type];
+      overlayStates[type] = toggleSwitch.checked;
       if (overlayStates[type]) {
         updateOverlay(type);
       } else {
@@ -735,7 +838,7 @@
         document.getElementById('lyricsText').value = 'Amazing Grace...';
         document.getElementById('lyricsFontColor').value = '#ffffff';
         document.getElementById('lyricsFontSize').value = '24';
-        document.getElementById('lyricsBgColor').value = '#333333';
+        document.getElementById('bibleBgColor').value = '#333333';
         document.getElementById('lyricsBgTransparent').checked = false;
       } else if (type === 'presenter') {
         document.getElementById('presenterTitle').value = 'Pastor';
@@ -745,61 +848,26 @@
         document.getElementById('presenterBgColor').value = '#333333';
         document.getElementById('presenterBgTransparent').checked = false;
       } else if (type === 'ticker') {
+        document.getElementById('tickerTitle').value = 'News';
         document.getElementById('tickerText').value = 'Breaking News';
+        document.getElementById('tickerTitleFontColor').value = '#000000';
         document.getElementById('tickerFontColor').value = '#ffffff';
-        document.getElementById('tickerFontSize').value = '24';
+        document.getElementById('tickerFontSize').value = '14';
         document.getElementById('tickerBgColor').value = '#ff0000';
         document.getElementById('tickerBgTransparent').checked = false;
+        document.getElementById('tickerScrollSpeed').value = '50';
+        document.getElementById('tickerTitleBlink').checked = false;
       } else if (type === 'image') {
         document.getElementById('imageInput').value = '';
       }
       if (overlayStates[type]) updateOverlay(type);
     }
 
-    function setupOverlayDragging(overlay, type) {
-      let isDragging = false;
-      let initialX, initialY, overlayX, overlayY;
-
-      overlay.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        overlayX = parseInt(overlay.style.left) || 0;
-        overlayY = parseInt(overlay.style.top) || 0;
-        initialX = e.clientX - overlayX;
-        initialY = e.clientY - overlayY;
-        overlay.style.transition = 'none';
-      });
-
-      document.addEventListener('mousemove', (e) => {
-        if (isDragging) {
-          e.preventDefault();
-          overlayX = e.clientX - initialX;
-          overlayY = e.clientY - initialY;
-
-          const previewCanvas = document.getElementById('previewCanvas');
-          const maxX = previewCanvas.offsetWidth - overlay.offsetWidth;
-          const maxY = previewCanvas.offsetHeight - overlay.offsetHeight;
-          overlayX = Math.max(0, Math.min(overlayX, maxX));
-          overlayY = Math.max(0, Math.min(overlayY, maxY));
-
-          overlay.style.left = `${overlayX}px`;
-          overlay.style.top = `${overlayY}px`;
-        }
-      });
-
-      document.addEventListener('mouseup', () => {
-        if (isDragging) {
-          isDragging = false;
-          overlay.style.transition = 'all 0.3s ease';
-          const data = { id: overlayId, type, position: { left: overlay.style.left, top: overlay.style.top } };
-          socket.emit('customize', data);
-        }
-      });
-    }
-
     // Drag-to-resize controls and preview horizontally
     const resizeHandle = document.getElementById('resizeHandle');
     const controlsContainer = document.getElementById('controlsContainer');
     const preview = document.getElementById('preview');
+    const outputCanvas = document.getElementById('outputCanvas');
     let isResizing = false;
     let initialX, initialControlsWidth;
 
@@ -828,27 +896,31 @@
       isResizing = false;
     });
 
-    // Dark Mode Toggle with LocalStorage
     function toggleDarkMode() {
       const isDark = document.body.classList.toggle('dark-mode');
       localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
     }
 
-    // Initialize Dark Mode from LocalStorage (default light)
     if (localStorage.getItem('darkMode') === 'enabled') {
       document.body.classList.add('dark-mode');
     }
 
-    // Tippy.js Initialization
     tippy('.control-group[data-tippy-content]', {
       theme: 'light',
       placement: 'top',
       arrow: true,
     });
 
-    // Event listeners for real-time updates
     overlayTypes.forEach(type => {
-      document.getElementById(`${type}Text`)?.addEventListener('input', () => updateOverlay(type));
+      if (type === 'ticker') {
+        document.getElementById('tickerTitle').addEventListener('input', () => updateOverlay(type));
+        document.getElementById('tickerText').addEventListener('input', () => updateOverlay(type));
+        document.getElementById('tickerTitleFontColor').addEventListener('input', () => updateOverlay(type));
+        document.getElementById('tickerScrollSpeed').addEventListener('input', () => updateOverlay(type));
+        document.getElementById('tickerTitleBlink').addEventListener('change', () => updateOverlay(type));
+      } else {
+        document.getElementById(`${type}Text`)?.addEventListener('input', () => updateOverlay(type));
+      }
       document.getElementById(`${type}FontColor`)?.addEventListener('input', () => updateOverlay(type));
       document.getElementById(`${type}FontSize`)?.addEventListener('input', () => updateOverlay(type));
       document.getElementById(`${type}BgColor`)?.addEventListener('input', () => updateOverlay(type));
@@ -861,7 +933,6 @@
       }
     });
 
-    // Initial reset
     overlayTypes.forEach(type => resetOverlay(type));
   </script>
 </body>
