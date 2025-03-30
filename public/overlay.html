@@ -1,12 +1,101 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <title>Overlay</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { background: transparent; margin: 0; overflow: hidden; }
-    #overlay { position: absolute; transition: opacity 0.3s ease; opacity: 1; }
-    .ticker { white-space: nowrap; animation: scroll 10s linear infinite; }
-    @keyframes scroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+    body { 
+      background: transparent; 
+      margin: 0; 
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    #overlay { 
+      position: absolute; 
+      transition: opacity 0.3s ease; 
+      opacity: 1;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .bible-lower-third {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      width: 90%;
+      opacity: 0;
+      animation: fadeIn 0.5s ease-in forwards;
+      position: relative;
+      margin: 0 auto;
+    }
+    .bible-reference {
+      position: relative;
+      width: 15%;
+      font-weight: 500;
+      padding: 8px 20px;
+      clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      opacity: 0.9;
+      z-index: 2;
+      border: none;
+      margin-bottom: -8px;
+    }
+    .bible-text {
+      position: relative;
+      width: 75%;
+      font-weight: 400;
+      padding: 12px 20px;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      opacity: 0.9;
+      z-index: 1;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      border: none;
+      min-height: fit-content;
+      margin-left: 5%;
+    }
+    .ticker {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      background: rgba(0, 0, 0, 0.8);
+    }
+    .ticker-title {
+      width: 15%;
+      padding: 8px;
+      text-align: center;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+    .ticker-content {
+      width: 85%;
+      overflow: hidden;
+      position: relative;
+    }
+    .ticker-text {
+      white-space: nowrap;
+      display: inline-block;
+      padding: 8px;
+    }
+    @keyframes scroll { 
+      0% { transform: translateX(100%); } 
+      100% { transform: translateX(-100%); } 
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
   </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
   <div id="overlay"></div>
@@ -14,44 +103,99 @@
   <script>
     const socket = io();
     const id = window.location.pathname.split('/').pop();
+    console.log('Connecting to overlay:', id);
     socket.emit('join', id);
 
-    socket.on('update', (data) => {
+    function updateOverlay(data) {
+      console.log('Updating overlay with data:', data);
       const overlay = document.getElementById('overlay');
       overlay.style.opacity = '0';
+      
       setTimeout(() => {
         overlay.innerHTML = '';
+        
         if (data.type === 'bible') {
-          overlay.style.bottom = '0';
+          overlay.style.width = '90%';
           overlay.style.left = '50%';
           overlay.style.transform = 'translateX(-50%)';
-          overlay.style.width = '800px';
-          overlay.style.height = '200px';
-          overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 20px">${data.text}<br><small>${data.ref}</small></div>`;
+          overlay.style.bottom = '120px';
+          overlay.innerHTML = `
+            <div class="bible-lower-third">
+              <div class="bible-reference" style="color: ${data.refFontColor}; font-size: ${data.refFontSize}; background: ${data.refBgColor}">${data.ref}</div>
+              <div class="bible-text" style="color: ${data.textFontColor}; font-size: ${data.textFontSize}; background: ${data.textBgColor}">${data.text}</div>
+            </div>
+          `;
         } else if (data.type === 'lyrics') {
-          overlay.style.bottom = '0';
+          overlay.style.width = '90%';
           overlay.style.left = '50%';
           overlay.style.transform = 'translateX(-50%)';
-          overlay.style.width = '600px';
-          overlay.style.height = '200px';
-          overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 20px">${data.text}</div>`;
+          overlay.style.bottom = '120px';
+          overlay.innerHTML = `
+            <div class="bible-lower-third">
+              <div class="bible-reference" style="color: ${data.titleFontColor}; font-size: ${data.titleFontSize}; background: ${data.titleBgColor}">${data.title}</div>
+              <div class="bible-text" style="color: ${data.textFontColor}; font-size: ${data.textFontSize}; background: ${data.textBgColor}">${data.text}</div>
+            </div>
+          `;
         } else if (data.type === 'presenter') {
-          overlay.style.bottom = '20px';
-          overlay.style.left = '20px';
-          overlay.style.width = '200px';
-          overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 5px 10px">${data.title}</div><div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 10px">${data.text}</div>`;
+          overlay.style.width = '90%';
+          overlay.style.left = '50%';
+          overlay.style.transform = 'translateX(-50%)';
+          overlay.style.bottom = '120px';
+          overlay.innerHTML = `
+            <div class="bible-lower-third">
+              <div class="bible-reference" style="color: ${data.titleFontColor}; font-size: ${data.titleFontSize}; background: ${data.titleBgColor}">${data.title}</div>
+              <div class="bible-text" style="color: ${data.textFontColor}; font-size: ${data.textFontSize}; background: ${data.textBgColor}">${data.text}</div>
+            </div>
+          `;
         } else if (data.type === 'ticker') {
+          overlay.style.position = 'fixed';
           overlay.style.bottom = '0';
+          overlay.style.left = '0';
           overlay.style.width = '100%';
-          overlay.style.height = '35px';
-          overlay.innerHTML = `<div class="ticker" style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}">${data.text}</div>`;
+          const fontSizePx = parseInt(data.textFontSize, 10);
+          const tickerHeight = fontSizePx + 16;
+          overlay.style.height = `${tickerHeight}px`;
+          overlay.style.overflow = 'hidden';
+          overlay.style.display = 'flex';
+
+          const repeatedText = (data.text + ' • ').repeat(2);
+          const scrollSpeedPxPerSec = data.scrollSpeed || 50;
+          const textWidth = repeatedText.length * (fontSizePx * 0.6);
+          const animationDuration = textWidth / scrollSpeedPxPerSec;
+
+          overlay.innerHTML = `
+            <div class="ticker">
+              <div class="ticker-title" style="color: ${data.titleFontColor}; font-size: ${data.titleFontSize}; background: ${data.titleBgColor}">
+                <span style="${data.titleBlink ? 'animation: blink 1s step-end infinite;' : ''}">${data.title}</span>
+              </div>
+              <div class="ticker-content" style="background: ${data.textBgColor}">
+                <div class="ticker-text" style="color: ${data.textFontColor}; font-size: ${data.textFontSize}; animation: scroll ${animationDuration}s linear infinite;">
+                  ${repeatedText}
+                </div>
+              </div>
+            </div>
+          `;
         } else if (data.type === 'image') {
-          overlay.style.bottom = '20px';
           overlay.style.left = '20px';
-          overlay.innerHTML = `<img src="${data.image}" style="width: 20px; height: 20px;">`;
+          overlay.style.top = '20px';
+          overlay.innerHTML = `<img src="${data.image}" style="width: 200px; height: 200px;">`;
         }
+        
         overlay.style.opacity = '1';
       }, 300);
+    }
+
+    // Listen for both 'update' and 'customize' events
+    socket.on('update', updateOverlay);
+    socket.on('customize', updateOverlay);
+
+    // Handle connection errors
+    socket.on('connect_error', (error) => {
+      console.error('Connection error:', error);
+    });
+
+    socket.on('error', (error) => {
+      console.error('Socket error:', error);
     });
   </script>
 </body>
