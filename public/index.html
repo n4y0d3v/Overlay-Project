@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Overlay MVP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -10,6 +11,8 @@
       padding: 0;
       color: #333;
       transition: background 0.3s, color 0.3s;
+      height: 100vh;
+      overflow: hidden;
     }
     .container {
       background: #fff;
@@ -24,11 +27,11 @@
     }
     .title-bar {
       background: #fff;
-      height: 48px;
+      height: 40px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 16px;
+      padding: 0 12px;
       border-bottom: 1px solid #e0e0e0;
       flex-shrink: 0;
       transition: background 0.3s, border-bottom-color 0.3s;
@@ -46,7 +49,7 @@
       align-items: center;
     }
     .title-bar h1 {
-      font-size: 20px;
+      font-size: 16px;
       font-weight: 600;
       margin: 0;
       color: #1a1a1a;
@@ -90,31 +93,52 @@
     }
     .overlay-section {
       border-bottom: 1px solid #e0e0e0;
-      padding-bottom: 12px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
       gap: 8px;
-      transition: border-bottom-color 0.3s;
+    }
+    .control-group-container {
+      background: #f8f9fa;
+      border-radius: 6px;
+      padding: 8px;
+      margin-bottom: 8px;
+      border: 1px solid #e9ecef;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .control-group-container h3 {
+      font-size: 12px;
+      font-weight: 600;
+      color: #495057;
+      margin: 0 0 8px 0;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #e9ecef;
+      width: 100%;
     }
     .control-group {
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      min-width: 120px;
-      margin: 4px 0;
+      min-width: 80px;
+      margin: 0;
+      flex: 1;
     }
     label { 
-      font-size: 12px;
+      font-size: 10px;
       font-weight: 500;
-      margin-bottom: 4px;
+      margin-bottom: 1px;
       color: #666;
       transition: color 0.3s;
     }
     input[type="text"], input[type="number"], select { 
       width: 100%;
-      max-width: 120px;
-      padding: 6px 8px;
-      font-size: 13px;
+      max-width: 80px;
+      padding: 2px 4px;
+      font-size: 11px;
       border: 1px solid #d0d0d0;
       border-radius: 4px;
       transition: border-color 0.2s, background 0.3s, color 0.3s;
@@ -124,8 +148,8 @@
       outline: none;
     }
     input[type="color"] { 
-      width: 40px;
-      height: 28px;
+      width: 32px;
+      height: 24px;
       padding: 0;
       border: none;
       border-radius: 4px;
@@ -143,10 +167,10 @@
       background: #007bff;
       color: #fff;
       border: none;
-      padding: 6px 12px;
+      padding: 2px 6px;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 500;
       transition: background 0.2s;
       display: flex;
@@ -154,7 +178,7 @@
       gap: 4px;
     }
     button i {
-      font-size: 12px;
+      font-size: 11px;
     }
     button:hover { 
       background: #0056b3;
@@ -168,7 +192,7 @@
       border-radius: 6px;
       flex: 1 1 40%;
       min-width: 200px;
-      max-height: calc(100vh - 48px);
+      height: calc(100vh - 40px);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -198,6 +222,14 @@
     .overlay {
       position: absolute;
       transition: none;
+      cursor: move;
+      -webkit-user-select: none;
+      user-select: none;
+      z-index: 1;
+    }
+    .overlay.dragging {
+      opacity: 0.8;
+      z-index: 1000;
     }
     .live-indicator {
       position: absolute;
@@ -215,44 +247,45 @@
       padding: 8px;
       width: 60%;
       min-width: 200px;
-      background: #fafafa;
-      border-right: 1px solid #e0e0e0;
+      background: #f8f9fa;
+      border-right: 1px solid #e9ecef;
       box-sizing: border-box;
       scrollbar-width: thin;
-      scrollbar-color: #bbb #fafafa;
-      transition: background 0.3s, border-right-color 0.3s;
+      scrollbar-color: #adb5bd #f8f9fa;
+      transition: all 0.3s ease;
+      height: calc(100vh - 40px);
     }
     #controlsContainer::-webkit-scrollbar {
       width: 6px;
     }
     #controlsContainer::-webkit-scrollbar-thumb {
-      background: #bbb;
+      background: #adb5bd;
       border-radius: 3px;
       transition: background 0.3s;
     }
     #controlsContainer::-webkit-scrollbar-track {
-      background: #fafafa;
+      background: #f8f9fa;
       transition: background 0.3s;
     }
     #resizeHandle {
       position: relative;
       width: 8px;
-      background: #d0d0d0;
+      background: #dee2e6;
       cursor: ew-resize;
       border-radius: 4px;
       z-index: 10;
-      transition: background 0.2s;
+      transition: all 0.2s ease;
     }
     #resizeHandle:hover {
-      background: #bbb;
+      background: #adb5bd;
     }
 
     /* Switch Styles */
     .switch {
       position: relative;
       display: inline-block;
-      width: 40px;
-      height: 20px;
+      width: 32px;
+      height: 18px;
     }
     .switch input {
       opacity: 0;
@@ -266,26 +299,89 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: #ccc;
-      transition: .4s;
+      background-color: #dee2e6;
+      transition: .3s;
       border-radius: 20px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     .slider:before {
       position: absolute;
       content: "";
-      height: 16px;
-      width: 16px;
+      height: 14px;
+      width: 14px;
       left: 2px;
       bottom: 2px;
       background-color: white;
-      transition: .4s;
+      transition: .3s;
       border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     input:checked + .slider {
-      background-color: #28a745;
+      background-color: #40c057;
+      box-shadow: inset 0 2px 4px rgba(64, 192, 87, 0.2);
     }
     input:checked + .slider:before {
-      transform: translateX(20px);
+      transform: translateX(14px);
+      box-shadow: 0 2px 4px rgba(64, 192, 87, 0.3);
+    }
+
+    /* Parallelogram Background for Reference */
+    .parallelogram-bg {
+      position: relative;
+      background: transparent;
+      padding: 8px 12px;
+      color: #ffffff;
+      z-index: 1;
+      border: none;
+    }
+    .parallelogram-bg::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -8px;
+      right: -8px;
+      bottom: 0;
+      background: #40c057;
+      transform: skew(-15deg);
+      z-index: -1;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(64, 192, 87, 0.2);
+    }
+
+    /* Rectangle Background for Content */
+    .rectangle-bg {
+      position: relative;
+      background: transparent;
+      padding: 8px 12px;
+      color: #ffffff;
+      z-index: 1;
+      border: none;
+    }
+    .rectangle-bg::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #228be6;
+      z-index: -1;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(34, 139, 230, 0.2);
+    }
+
+    /* Override default input styles for these classes */
+    input.parallelogram-bg, input.rectangle-bg {
+      border: 1px solid #d0d0d0; /* Retain border for visibility */
+      transition: border-color 0.2s, color 0.3s; /* Match original transitions */
+    }
+
+    /* Focus States */
+    input.parallelogram-bg:focus, input.rectangle-bg:focus {
+      border-color: #fff; /* White border on focus for contrast */
+      outline: none;
     }
 
     /* Dark Mode via Class */
@@ -323,6 +419,16 @@
     .dark-mode input[type="text"]:focus, .dark-mode input[type="number"]:focus, .dark-mode select:focus {
       border-color: #1e90ff;
     }
+    .dark-mode .parallelogram-bg::before {
+      background: #1e7e34; /* Darker green */
+    }
+    .dark-mode .rectangle-bg::before {
+      background: #0056b3; /* Darker blue */
+    }
+    .dark-mode input.parallelogram-bg, .dark-mode input.rectangle-bg {
+      border-color: #444; /* Match dark mode border */
+      color: #ddd; /* Match dark mode text */
+    }
     .dark-mode button {
       background: #1e90ff;
     }
@@ -356,6 +462,99 @@
     .dark-mode .overlay-section {
       border-bottom-color: #444;
     }
+
+    /* Bible Lower-Third Specific Styles */
+    .bible-lower-third {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      width: 90%;
+      opacity: 0;
+      animation: fadeIn 0.5s ease-in forwards;
+      position: relative;
+      margin: 0 auto;
+    }
+
+    .bible-reference {
+      position: relative;
+      width: 15%;
+      background: #28a745;
+      color: #ffffff;
+      font-weight: 500;
+      padding: 8px 20px;
+      clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      opacity: 0.9;
+      z-index: 2;
+      border: none;
+      margin-bottom: -8px;
+    }
+
+    .bible-text {
+      position: relative;
+      width: 75%;
+      background: #007bff;
+      color: #ffffff;
+      font-weight: 400;
+      padding: 12px 20px;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      opacity: 0.9;
+      z-index: 1;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      border: none;
+      min-height: fit-content;
+      margin-left: 5%;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Tooltip Styles */
+    .tippy-box {
+      background: #ffffff;
+      color: #212529;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      font-size: 13px;
+      padding: 8px 12px;
+      border: 1px solid #e9ecef;
+    }
+
+    .dark-mode .tippy-box {
+      background: #252525;
+      color: #e9ecef;
+      border-color: #2d2d2d;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Add these new styles */
+    .large-text {
+      min-height: 40px;
+      resize: vertical;
+      font-family: inherit;
+      line-height: 1.4;
+      font-size: 12px;
+      width: 100%;
+    }
+
+    textarea.large-text {
+      width: 100%;
+      max-width: none;
+    }
+
+    .dark-mode .control-group-container {
+      background: #2d2d2d;
+      border-color: #3d3d3d;
+    }
+
+    .dark-mode .control-group-container h3 {
+      color: #e9ecef;
+      border-bottom-color: #3d3d3d;
+    }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -388,26 +587,57 @@
         <!-- Bible Lower-Third -->
         <div class="overlay-section">
           <h2>Bible Lower-Third</h2>
-          <div class="control-group" data-tippy-content="Enter a Bible verse reference (e.g., John 3:16)">
-            <label for="bibleText">Verse Reference</label>
-            <input type="text" id="bibleText" placeholder="e.g., John 3:16" value="John 3:16" maxlength="50">
+          
+          <!-- Verse Reference Group -->
+          <div class="control-group-container">
+            <h3>Verse Reference</h3>
+            <div class="control-group" data-tippy-content="Enter a Bible verse reference (e.g., John 3:16)">
+              <label for="bibleReference">Reference</label>
+              <input type="text" id="bibleReference" placeholder="e.g., John 3:16" value="John 3:16" maxlength="50" class="parallelogram-bg">
+            </div>
+            <div class="control-group" data-tippy-content="Set reference font size in pixels (10-50)">
+              <label for="bibleRefFontSize">Font Size</label>
+              <input type="number" id="bibleRefFontSize" min="10" max="50" value="12">
+            </div>
+            <div class="control-group" data-tippy-content="Select reference text color">
+              <label for="bibleRefFontColor">Font Color</label>
+              <input type="color" id="bibleRefFontColor" value="#ffffff">
+            </div>
+            <div class="control-group" data-tippy-content="Select reference background color">
+              <label for="bibleRefBgColor">Bg Color</label>
+              <input type="color" id="bibleRefBgColor" value="#28a745">
+            </div>
+            <div class="control-group" data-tippy-content="Make reference background transparent">
+              <label for="bibleRefBgTransparent">Transparent</label>
+              <input type="checkbox" id="bibleRefBgTransparent">
+            </div>
           </div>
-          <div class="control-group" data-tippy-content="Select text color">
-            <label for="bibleFontColor">Font Color</label>
-            <input type="color" id="bibleFontColor" value="#ffffff">
+
+          <!-- Verse Content Group -->
+          <div class="control-group-container">
+            <h3>Verse Content</h3>
+            <div class="control-group" data-tippy-content="Enter verse content manually or fetch from API">
+              <label for="bibleContent">Content</label>
+              <textarea id="bibleContent" placeholder="Enter verse or fetch..." value="For God so loved the world..." maxlength="500" class="rectangle-bg large-text"></textarea>
+            </div>
+            <div class="control-group" data-tippy-content="Set content font size in pixels (10-50)">
+              <label for="bibleTextFontSize">Font Size</label>
+              <input type="number" id="bibleTextFontSize" min="10" max="50" value="12">
+            </div>
+            <div class="control-group" data-tippy-content="Select content text color">
+              <label for="bibleTextFontColor">Font Color</label>
+              <input type="color" id="bibleTextFontColor" value="#ffffff">
+            </div>
+            <div class="control-group" data-tippy-content="Select content background color">
+              <label for="bibleTextBgColor">Bg Color</label>
+              <input type="color" id="bibleTextBgColor" value="#007bff">
+            </div>
+            <div class="control-group" data-tippy-content="Make content background transparent">
+              <label for="bibleTextBgTransparent">Transparent</label>
+              <input type="checkbox" id="bibleTextBgTransparent">
+            </div>
           </div>
-          <div class="control-group" data-tippy-content="Set font size in pixels (10-50)">
-            <label for="bibleFontSize">Font Size</label>
-            <input type="number" id="bibleFontSize" min="10" max="50" value="24">
-          </div>
-          <div class="control-group" data-tippy-content="Select background color">
-            <label for="bibleBgColor">Bg Color</label>
-            <input type="color" id="bibleBgColor" value="#333333">
-          </div>
-          <div class="control-group" data-tippy-content="Make background transparent">
-            <label for="bibleBgTransparent">Transparent</label>
-            <input type="checkbox" id="bibleBgTransparent">
-          </div>
+
           <div class="control-group">
             <label class="switch">
               <input type="checkbox" id="toggleBible" onchange="toggleOverlay('bible')">
@@ -417,31 +647,65 @@
           <div class="control-group">
             <button onclick="resetOverlay('bible')"><i class="fas fa-undo"></i> Reset</button>
           </div>
+          <div class="control-group">
+            <button onclick="fetchBibleVerse()"><i class="fas fa-download"></i> Fetch Verse</button>
+          </div>
         </div>
 
         <!-- Lyrics Lower-Third -->
         <div class="overlay-section">
           <h2>Lyrics Lower-Third</h2>
-          <div class="control-group" data-tippy-content="Enter lyrics text">
-            <label for="lyricsText">Lyrics</label>
-            <input type="text" id="lyricsText" placeholder="e.g., Amazing Grace..." value="Amazing Grace..." maxlength="50">
+          
+          <!-- Lyrics Title Group -->
+          <div class="control-group-container">
+            <h3>Lyrics Title</h3>
+            <div class="control-group" data-tippy-content="Enter lyrics title">
+              <label for="lyricsTitle">Title</label>
+              <input type="text" id="lyricsTitle" placeholder="e.g., Song Title" value="Amazing Grace" maxlength="50" class="parallelogram-bg">
+            </div>
+            <div class="control-group" data-tippy-content="Set title font size in pixels (10-50)">
+              <label for="lyricsTitleFontSize">Font Size</label>
+              <input type="number" id="lyricsTitleFontSize" min="10" max="50" value="12">
+            </div>
+            <div class="control-group" data-tippy-content="Select title text color">
+              <label for="lyricsTitleFontColor">Font Color</label>
+              <input type="color" id="lyricsTitleFontColor" value="#ffffff">
+            </div>
+            <div class="control-group" data-tippy-content="Select title background color">
+              <label for="lyricsTitleBgColor">Bg Color</label>
+              <input type="color" id="lyricsTitleBgColor" value="#28a745">
+            </div>
+            <div class="control-group" data-tippy-content="Make title background transparent">
+              <label for="lyricsTitleBgTransparent">Transparent</label>
+              <input type="checkbox" id="lyricsTitleBgTransparent">
+            </div>
           </div>
-          <div class="control-group" data-tippy-content="Select text color">
-            <label for="lyricsFontColor">Font Color</label>
-            <input type="color" id="lyricsFontColor" value="#ffffff">
+
+          <!-- Lyrics Content Group -->
+          <div class="control-group-container">
+            <h3>Lyrics Content</h3>
+            <div class="control-group" data-tippy-content="Enter lyrics text">
+              <label for="lyricsText">Content</label>
+              <textarea id="lyricsText" placeholder="e.g., Amazing Grace..." value="Amazing Grace..." maxlength="500" class="rectangle-bg large-text"></textarea>
+            </div>
+            <div class="control-group" data-tippy-content="Set content font size in pixels (10-50)">
+              <label for="lyricsTextFontSize">Font Size</label>
+              <input type="number" id="lyricsTextFontSize" min="10" max="50" value="12">
+            </div>
+            <div class="control-group" data-tippy-content="Select content text color">
+              <label for="lyricsTextFontColor">Font Color</label>
+              <input type="color" id="lyricsTextFontColor" value="#ffffff">
+            </div>
+            <div class="control-group" data-tippy-content="Select content background color">
+              <label for="lyricsTextBgColor">Bg Color</label>
+              <input type="color" id="lyricsTextBgColor" value="#007bff">
+            </div>
+            <div class="control-group" data-tippy-content="Make content background transparent">
+              <label for="lyricsTextBgTransparent">Transparent</label>
+              <input type="checkbox" id="lyricsTextBgTransparent">
+            </div>
           </div>
-          <div class="control-group" data-tippy-content="Set font size in pixels (10-50)">
-            <label for="lyricsFontSize">Font Size</label>
-            <input type="number" id="lyricsFontSize" min="10" max="50" value="24">
-          </div>
-          <div class="control-group" data-tippy-content="Select background color">
-            <label for="lyricsBgColor">Bg Color</label>
-            <input type="color" id="lyricsBgColor" value="#333333">
-          </div>
-          <div class="control-group" data-tippy-content="Make background transparent">
-            <label for="lyricsBgTransparent">Transparent</label>
-            <input type="checkbox" id="lyricsBgTransparent">
-          </div>
+
           <div class="control-group">
             <label class="switch">
               <input type="checkbox" id="toggleLyrics" onchange="toggleOverlay('lyrics')">
@@ -456,30 +720,57 @@
         <!-- Presenter Lower-Third -->
         <div class="overlay-section">
           <h2>Presenter Lower-Third</h2>
-          <div class="control-group" data-tippy-content="Enter presenter title">
-            <label for="presenterTitle">Title</label>
-            <input type="text" id="presenterTitle" placeholder="e.g., Pastor" value="Pastor" maxlength="50">
+          
+          <!-- Presenter Title Group -->
+          <div class="control-group-container">
+            <h3>Presenter Title</h3>
+            <div class="control-group" data-tippy-content="Enter presenter title">
+              <label for="presenterTitle">Title</label>
+              <input type="text" id="presenterTitle" placeholder="e.g., Pastor" value="Pastor" maxlength="50" class="parallelogram-bg">
+            </div>
+            <div class="control-group" data-tippy-content="Set title font size in pixels (10-50)">
+              <label for="presenterTitleFontSize">Font Size</label>
+              <input type="number" id="presenterTitleFontSize" min="10" max="50" value="12">
+            </div>
+            <div class="control-group" data-tippy-content="Select title text color">
+              <label for="presenterTitleFontColor">Font Color</label>
+              <input type="color" id="presenterTitleFontColor" value="#ffffff">
+            </div>
+            <div class="control-group" data-tippy-content="Select title background color">
+              <label for="presenterTitleBgColor">Bg Color</label>
+              <input type="color" id="presenterTitleBgColor" value="#28a745">
+            </div>
+            <div class="control-group" data-tippy-content="Make title background transparent">
+              <label for="presenterTitleBgTransparent">Transparent</label>
+              <input type="checkbox" id="presenterTitleBgTransparent">
+            </div>
           </div>
-          <div class="control-group" data-tippy-content="Enter presenter name">
-            <label for="presenterText">Name</label>
-            <input type="text" id="presenterText" placeholder="e.g., John Doe" value="John Doe" maxlength="50">
+
+          <!-- Presenter Name Group -->
+          <div class="control-group-container">
+            <h3>Presenter Name</h3>
+            <div class="control-group" data-tippy-content="Enter presenter name">
+              <label for="presenterText">Name</label>
+              <input type="text" id="presenterText" placeholder="e.g., John Doe" value="John Doe" maxlength="50" class="rectangle-bg">
+            </div>
+            <div class="control-group" data-tippy-content="Set name font size in pixels (10-50)">
+              <label for="presenterTextFontSize">Font Size</label>
+              <input type="number" id="presenterTextFontSize" min="10" max="50" value="12">
+            </div>
+            <div class="control-group" data-tippy-content="Select name text color">
+              <label for="presenterTextFontColor">Font Color</label>
+              <input type="color" id="presenterTextFontColor" value="#ffffff">
+            </div>
+            <div class="control-group" data-tippy-content="Select name background color">
+              <label for="presenterTextBgColor">Bg Color</label>
+              <input type="color" id="presenterTextBgColor" value="#007bff">
+            </div>
+            <div class="control-group" data-tippy-content="Make name background transparent">
+              <label for="presenterTextBgTransparent">Transparent</label>
+              <input type="checkbox" id="presenterTextBgTransparent">
+            </div>
           </div>
-          <div class="control-group" data-tippy-content="Select text color">
-            <label for="presenterFontColor">Font Color</label>
-            <input type="color" id="presenterFontColor" value="#ffffff">
-          </div>
-          <div class="control-group" data-tippy-content="Set font size in pixels (10-50)">
-            <label for="presenterFontSize">Font Size</label>
-            <input type="number" id="presenterFontSize" min="10" max="50" value="24">
-          </div>
-          <div class="control-group" data-tippy-content="Select background color">
-            <label for="presenterBgColor">Bg Color</label>
-            <input type="color" id="presenterBgColor" value="#333333">
-          </div>
-          <div class="control-group" data-tippy-content="Make background transparent">
-            <label for="presenterBgTransparent">Transparent</label>
-            <input type="checkbox" id="presenterBgTransparent">
-          </div>
+
           <div class="control-group">
             <label class="switch">
               <input type="checkbox" id="togglePresenter" onchange="toggleOverlay('presenter')">
@@ -494,34 +785,57 @@
         <!-- Ticker -->
         <div class="overlay-section">
           <h2>Ticker</h2>
-          <div class="control-group" data-tippy-content="Enter ticker title">
-            <label for="tickerTitle">Title</label>
-            <input type="text" id="tickerTitle" placeholder="e.g., News" value="News" maxlength="50">
+          
+          <!-- Ticker Title Group -->
+          <div class="control-group-container">
+            <h3>Ticker Title</h3>
+            <div class="control-group" data-tippy-content="Enter ticker title">
+              <label for="tickerTitle">Title</label>
+              <input type="text" id="tickerTitle" placeholder="e.g., News" value="News" maxlength="50" class="parallelogram-bg">
+            </div>
+            <div class="control-group" data-tippy-content="Set title font size in pixels (10-50)">
+              <label for="tickerTitleFontSize">Font Size</label>
+              <input type="number" id="tickerTitleFontSize" min="10" max="50" value="14">
+            </div>
+            <div class="control-group" data-tippy-content="Select title text color">
+              <label for="tickerTitleFontColor">Font Color</label>
+              <input type="color" id="tickerTitleFontColor" value="#000000">
+            </div>
+            <div class="control-group" data-tippy-content="Select title background color">
+              <label for="tickerTitleBgColor">Bg Color</label>
+              <input type="color" id="tickerTitleBgColor" value="#ffffff">
+            </div>
+            <div class="control-group" data-tippy-content="Make title background transparent">
+              <label for="tickerTitleBgTransparent">Transparent</label>
+              <input type="checkbox" id="tickerTitleBgTransparent">
+            </div>
           </div>
-          <div class="control-group" data-tippy-content="Enter ticker content">
-            <label for="tickerText">Content</label>
-            <input type="text" id="tickerText" placeholder="e.g., Breaking News" value="Breaking News" maxlength="950">
+
+          <!-- Ticker Content Group -->
+          <div class="control-group-container">
+            <h3>Ticker Content</h3>
+            <div class="control-group" data-tippy-content="Enter ticker content">
+              <label for="tickerText">Content</label>
+              <textarea id="tickerText" placeholder="e.g., Breaking News" value="Breaking News" maxlength="950" class="rectangle-bg large-text"></textarea>
+            </div>
+            <div class="control-group" data-tippy-content="Set content font size in pixels (10-50)">
+              <label for="tickerTextFontSize">Font Size</label>
+              <input type="number" id="tickerTextFontSize" min="10" max="50" value="14">
+            </div>
+            <div class="control-group" data-tippy-content="Select content text color">
+              <label for="tickerTextFontColor">Font Color</label>
+              <input type="color" id="tickerTextFontColor" value="#ffffff">
+            </div>
+            <div class="control-group" data-tippy-content="Select content background color">
+              <label for="tickerTextBgColor">Bg Color</label>
+              <input type="color" id="tickerTextBgColor" value="#ff0000">
+            </div>
+            <div class="control-group" data-tippy-content="Make content background transparent">
+              <label for="tickerTextBgTransparent">Transparent</label>
+              <input type="checkbox" id="tickerTextBgTransparent">
+            </div>
           </div>
-          <div class="control-group" data-tippy-content="Select title text color">
-            <label for="tickerTitleFontColor">Title Font Color</label>
-            <input type="color" id="tickerTitleFontColor" value="#000000">
-          </div>
-          <div class="control-group" data-tippy-content="Select content text color">
-            <label for="tickerFontColor">Content Font Color</label>
-            <input type="color" id="tickerFontColor" value="#ffffff">
-          </div>
-          <div class="control-group" data-tippy-content="Set font size in pixels (10-50)">
-            <label for="tickerFontSize">Font Size</label>
-            <input type="number" id="tickerFontSize" min="10" max="50" value="14">
-          </div>
-          <div class="control-group" data-tippy-content="Select content background color">
-            <label for="tickerBgColor">Content Bg Color</label>
-            <input type="color" id="tickerBgColor" value="#ff0000">
-          </div>
-          <div class="control-group" data-tippy-content="Make content background transparent">
-            <label for="tickerBgTransparent">Transparent</label>
-            <input type="checkbox" id="tickerBgTransparent">
-          </div>
+
           <div class="control-group" data-tippy-content="Set content scroll speed in pixels per second (10-100)">
             <label for="tickerScrollSpeed">Scroll Speed (px/s)</label>
             <input type="number" id="tickerScrollSpeed" min="10" max="100" value="50">
@@ -619,11 +933,20 @@
         const data = await response.json();
         const text = data.data.content.replace(/\n/g, ' ').trim();
         const ref = data.data.reference;
+        document.getElementById('bibleContent').value = text; // Populate content field
         return { text, ref };
       } catch (error) {
         console.error('Error fetching Bible text:', error);
+        document.getElementById('bibleContent').value = `Error: Invalid reference (${input})`;
         return { text: `Error: Invalid reference (${input})`, ref: input };
       }
+    }
+
+    function fetchBibleVerse() {
+      const reference = document.getElementById('bibleReference').value;
+      fetchBibleText(reference).then(bibleData => {
+        updateOverlay('bible'); // Trigger update after fetch
+      });
     }
 
     function updateOverlay(type) {
@@ -642,39 +965,47 @@
           reader.readAsDataURL(file);
         }
       } else {
-        data.fontColor = document.getElementById(`${type}FontColor`).value;
-        data.fontSize = document.getElementById(`${type}FontSize`).value + 'px';
-        data.bgColor = document.getElementById(`${type}BgTransparent`).checked ? 'transparent' : document.getElementById(`${type}BgColor`).value;
-        if (type === 'presenter') {
+        if (type === 'bible') {
+          data.ref = document.getElementById('bibleReference').value;
+          data.text = document.getElementById('bibleContent').value;
+          data.refFontSize = document.getElementById('bibleRefFontSize').value + 'px';
+          data.textFontSize = document.getElementById('bibleTextFontSize').value + 'px';
+          data.refFontColor = document.getElementById('bibleRefFontColor').value;
+          data.textFontColor = document.getElementById('bibleTextFontColor').value;
+          data.refBgColor = document.getElementById('bibleRefBgTransparent').checked ? 'transparent' : document.getElementById('bibleRefBgColor').value;
+          data.textBgColor = document.getElementById('bibleTextBgTransparent').checked ? 'transparent' : document.getElementById('bibleTextBgColor').value;
+        } else if (type === 'lyrics') {
+          data.title = document.getElementById('lyricsTitle').value;
+          data.text = document.getElementById('lyricsText').value;
+          data.titleFontSize = document.getElementById('lyricsTitleFontSize').value + 'px';
+          data.textFontSize = document.getElementById('lyricsTextFontSize').value + 'px';
+          data.titleFontColor = document.getElementById('lyricsTitleFontColor').value;
+          data.textFontColor = document.getElementById('lyricsTextFontColor').value;
+          data.titleBgColor = document.getElementById('lyricsTitleBgTransparent').checked ? 'transparent' : document.getElementById('lyricsTitleBgColor').value;
+          data.textBgColor = document.getElementById('lyricsTextBgTransparent').checked ? 'transparent' : document.getElementById('lyricsTextBgColor').value;
+        } else if (type === 'presenter') {
           data.title = document.getElementById('presenterTitle').value;
           data.text = document.getElementById('presenterText').value;
-          socket.emit('customize', data);
-          if (overlayStates[type]) renderOverlay(data);
-        } else if (type === 'bible') {
-          const reference = document.getElementById('bibleText').value;
-          fetchBibleText(reference).then(bibleData => {
-            data.text = bibleData.text;
-            data.ref = bibleData.ref;
-            socket.emit('customize', data);
-            if (overlayStates[type]) renderOverlay(data);
-          });
+          data.titleFontSize = document.getElementById('presenterTitleFontSize').value + 'px';
+          data.textFontSize = document.getElementById('presenterTextFontSize').value + 'px';
+          data.titleFontColor = document.getElementById('presenterTitleFontColor').value;
+          data.textFontColor = document.getElementById('presenterTextFontColor').value;
+          data.titleBgColor = document.getElementById('presenterTitleBgTransparent').checked ? 'transparent' : document.getElementById('presenterTitleBgColor').value;
+          data.textBgColor = document.getElementById('presenterTextBgTransparent').checked ? 'transparent' : document.getElementById('presenterTextBgColor').value;
         } else if (type === 'ticker') {
           data.title = document.getElementById('tickerTitle').value;
           data.text = document.getElementById('tickerText').value;
+          data.titleFontSize = document.getElementById('tickerTitleFontSize').value + 'px';
+          data.textFontSize = document.getElementById('tickerTextFontSize').value + 'px';
           data.titleFontColor = document.getElementById('tickerTitleFontColor').value;
+          data.textFontColor = document.getElementById('tickerTextFontColor').value;
+          data.titleBgColor = document.getElementById('tickerTitleBgTransparent').checked ? 'transparent' : document.getElementById('tickerTitleBgColor').value;
+          data.textBgColor = document.getElementById('tickerTextBgTransparent').checked ? 'transparent' : document.getElementById('tickerTextBgColor').value;
           data.titleBlink = document.getElementById('tickerTitleBlink').checked;
           data.scrollSpeed = parseInt(document.getElementById('tickerScrollSpeed').value, 10);
-          const totalLength = data.title.length + data.text.length;
-          if (totalLength > 1000) {
-            data.text = data.text.substring(0, 1000 - data.title.length);
-          }
-          socket.emit('customize', data);
-          if (overlayStates[type]) renderOverlay(data);
-        } else {
-          data.text = document.getElementById(`${type}Text`).value;
-          socket.emit('customize', data);
-          if (overlayStates[type]) renderOverlay(data);
         }
+        socket.emit('customize', data);
+        if (overlayStates[type]) renderOverlay(data);
       }
     }
 
@@ -687,20 +1018,65 @@
         overlay.className = 'overlay';
         overlayElements[data.type] = overlay;
         outputCanvas.appendChild(overlay);
+        
+        // Add drag functionality for all overlays except ticker
+        if (data.type !== 'ticker') {
+          makeDraggable(overlay, data.type);
+        }
       }
 
-      if (data.type === 'ticker') {
+      if (data.type === 'bible') {
+        // Only set initial position if not already positioned
+        if (!overlay.style.top && !overlay.style.left) {
+          overlay.style.width = '90%';
+          overlay.style.left = '50%';
+          overlay.style.transform = 'translateX(-50%)';
+          overlay.style.bottom = '120px';
+        }
+        overlay.innerHTML = `
+          <div class="bible-lower-third">
+            <div class="bible-reference" style="color: ${data.refFontColor}; font-size: ${data.refFontSize}; background: ${data.refBgColor}">${data.ref}</div>
+            <div class="bible-text" style="color: ${data.textFontColor}; font-size: ${data.textFontSize}; background: ${data.textBgColor}">${data.text}</div>
+          </div>
+        `;
+      } else if (data.type === 'lyrics') {
+        // Only set initial position if not already positioned
+        if (!overlay.style.top && !overlay.style.left) {
+          overlay.style.width = '90%';
+          overlay.style.left = '50%';
+          overlay.style.transform = 'translateX(-50%)';
+          overlay.style.bottom = '120px';
+        }
+        overlay.innerHTML = `
+          <div class="bible-lower-third">
+            <div class="bible-reference" style="color: ${data.titleFontColor}; font-size: ${data.titleFontSize}; background: ${data.titleBgColor}">${data.title}</div>
+            <div class="bible-text" style="color: ${data.textFontColor}; font-size: ${data.textFontSize}; background: ${data.textBgColor}">${data.text}</div>
+          </div>
+        `;
+      } else if (data.type === 'presenter') {
+        // Only set initial position if not already positioned
+        if (!overlay.style.top && !overlay.style.left) {
+          overlay.style.width = '90%';
+          overlay.style.left = '50%';
+          overlay.style.transform = 'translateX(-50%)';
+          overlay.style.bottom = '120px';
+        }
+        overlay.innerHTML = `
+          <div class="bible-lower-third">
+            <div class="bible-reference" style="color: ${data.titleFontColor}; font-size: ${data.titleFontSize}; background: ${data.titleBgColor}">${data.title}</div>
+            <div class="bible-text" style="color: ${data.textFontColor}; font-size: ${data.textFontSize}; background: ${data.textBgColor}">${data.text}</div>
+          </div>
+        `;
+      } else if (data.type === 'ticker') {
         overlay.style.bottom = '5px';
         overlay.style.left = '0';
         overlay.style.width = '100%';
-        // Dynamic height based on font size (fontSize in pixels + padding)
         const fontSizePx = parseInt(data.fontSize, 10);
-        const tickerHeight = fontSizePx + 8; // Add 8px for padding (2px top + 2px bottom + extra buffer)
+        const tickerHeight = fontSizePx + 8;
         overlay.style.height = `${tickerHeight}px`;
         overlay.style.overflow = 'hidden';
         overlay.style.display = 'flex';
 
-        // Create a temporary element to measure the content width
         const tempDiv = document.createElement('div');
         tempDiv.style.position = 'absolute';
         tempDiv.style.visibility = 'hidden';
@@ -711,13 +1087,10 @@
         const textWidth = tempDiv.offsetWidth;
         document.body.removeChild(tempDiv);
 
-        // Calculate the content container width (85% of the ticker)
         const contentContainerWidth = outputCanvas.offsetWidth * 0.85;
-        // Calculate the number of repetitions needed to fill at least twice the container width for seamless scrolling
         const minRepetitions = Math.ceil((contentContainerWidth * 2) / textWidth);
         const repeatedText = (data.text + ' • ').repeat(Math.max(minRepetitions, 2));
 
-        // Create a second temporary element to measure the repeated content width
         const tempDivRepeated = document.createElement('div');
         tempDivRepeated.style.position = 'absolute';
         tempDivRepeated.style.visibility = 'hidden';
@@ -728,18 +1101,17 @@
         const repeatedTextWidth = tempDivRepeated.offsetWidth;
         document.body.removeChild(tempDivRepeated);
 
-        // Calculate animation duration based on scroll speed (pixels per second)
-        const scrollSpeedPxPerSec = data.scrollSpeed; // pixels per second
-        const animationDuration = repeatedTextWidth / scrollSpeedPxPerSec; // seconds
+        const scrollSpeedPxPerSec = data.scrollSpeed;
+        const animationDuration = repeatedTextWidth / scrollSpeedPxPerSec;
 
         overlay.innerHTML = `
-          <div style="width: 15%; height: 100%; background: #ffffff; font-size: ${data.fontSize}; padding: 2px 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <div style="width: 15%; height: 100%; background: ${data.titleBgColor}; font-size: ${data.titleFontSize}; padding: 2px 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
             <span style="color: ${data.titleFontColor}; ${data.titleBlink ? 'animation: blink 1s step-end infinite;' : ''}">
               ${data.title}
             </span>
           </div>
-          <div style="width: 85%; height: 100%; background: ${data.bgColor}; position: relative; overflow: hidden;">
-            <div id="tickerContent-${data.id}" style="color: ${data.fontColor}; font-size: ${data.fontSize}; white-space: nowrap; animation: scroll ${animationDuration}s linear infinite; padding: 2px 10px; display: inline-block; position: absolute; top: 0; left: 0;">
+          <div style="width: 85%; height: 100%; background: ${data.textBgColor}; position: relative; overflow: hidden;">
+            <div id="tickerContent-${data.id}" style="color: ${data.textFontColor}; font-size: ${data.textFontSize}; white-space: nowrap; animation: scroll ${animationDuration}s linear infinite; padding: 2px 10px; display: inline-block; position: absolute; top: 0; left: 0;">
               ${repeatedText}
             </div>
           </div>
@@ -755,21 +1127,6 @@
             }
           </style>
         `;
-      } else if (data.type === 'bible' || data.type === 'lyrics' || data.type === 'presenter') {
-        overlay.style.bottom = '80px';
-        overlay.style.left = '20px';
-        if (data.type === 'bible') {
-          overlay.style.width = '800px';
-          overlay.style.height = '200px';
-          overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 20px">${data.text}<br><small>${data.ref}</small></div>`;
-        } else if (data.type === 'lyrics') {
-          overlay.style.width = '600px';
-          overlay.style.height = '200px';
-          overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 20px">${data.text}</div>`;
-        } else if (data.type === 'presenter') {
-          overlay.style.width = '300px';
-          overlay.innerHTML = `<div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 5px 10px">${data.title}</div><div style="color: ${data.fontColor}; font-size: ${data.fontSize}; background: ${data.bgColor}; padding: 10px">${data.text}</div>`;
-        }
       } else if (data.type === 'image') {
         overlay.style.left = '20px';
         overlay.style.top = '20px';
@@ -829,32 +1186,49 @@
 
     function resetOverlay(type) {
       if (type === 'bible') {
-        document.getElementById('bibleText').value = 'John 3:16';
-        document.getElementById('bibleFontColor').value = '#ffffff';
-        document.getElementById('bibleFontSize').value = '24';
-        document.getElementById('bibleBgColor').value = '#333333';
-        document.getElementById('bibleBgTransparent').checked = false;
+        document.getElementById('bibleReference').value = 'John 3:16';
+        document.getElementById('bibleContent').value = 'For God so loved the world...';
+        document.getElementById('bibleRefFontSize').value = '12';
+        document.getElementById('bibleTextFontSize').value = '12';
+        document.getElementById('bibleRefFontColor').value = '#ffffff';
+        document.getElementById('bibleTextFontColor').value = '#ffffff';
+        document.getElementById('bibleRefBgColor').value = '#28a745';
+        document.getElementById('bibleTextBgColor').value = '#007bff';
+        document.getElementById('bibleRefBgTransparent').checked = false;
+        document.getElementById('bibleTextBgTransparent').checked = false;
       } else if (type === 'lyrics') {
+        document.getElementById('lyricsTitle').value = 'Amazing Grace';
         document.getElementById('lyricsText').value = 'Amazing Grace...';
-        document.getElementById('lyricsFontColor').value = '#ffffff';
-        document.getElementById('lyricsFontSize').value = '24';
-        document.getElementById('bibleBgColor').value = '#333333';
-        document.getElementById('lyricsBgTransparent').checked = false;
+        document.getElementById('lyricsTitleFontSize').value = '12';
+        document.getElementById('lyricsTextFontSize').value = '12';
+        document.getElementById('lyricsTitleFontColor').value = '#ffffff';
+        document.getElementById('lyricsTextFontColor').value = '#ffffff';
+        document.getElementById('lyricsTitleBgColor').value = '#28a745';
+        document.getElementById('lyricsTextBgColor').value = '#007bff';
+        document.getElementById('lyricsTitleBgTransparent').checked = false;
+        document.getElementById('lyricsTextBgTransparent').checked = false;
       } else if (type === 'presenter') {
         document.getElementById('presenterTitle').value = 'Pastor';
         document.getElementById('presenterText').value = 'John Doe';
-        document.getElementById('presenterFontColor').value = '#ffffff';
-        document.getElementById('presenterFontSize').value = '24';
-        document.getElementById('presenterBgColor').value = '#333333';
-        document.getElementById('presenterBgTransparent').checked = false;
+        document.getElementById('presenterTitleFontSize').value = '12';
+        document.getElementById('presenterTextFontSize').value = '12';
+        document.getElementById('presenterTitleFontColor').value = '#ffffff';
+        document.getElementById('presenterTextFontColor').value = '#ffffff';
+        document.getElementById('presenterTitleBgColor').value = '#28a745';
+        document.getElementById('presenterTextBgColor').value = '#007bff';
+        document.getElementById('presenterTitleBgTransparent').checked = false;
+        document.getElementById('presenterTextBgTransparent').checked = false;
       } else if (type === 'ticker') {
         document.getElementById('tickerTitle').value = 'News';
         document.getElementById('tickerText').value = 'Breaking News';
+        document.getElementById('tickerTitleFontSize').value = '14';
+        document.getElementById('tickerTextFontSize').value = '14';
         document.getElementById('tickerTitleFontColor').value = '#000000';
-        document.getElementById('tickerFontColor').value = '#ffffff';
-        document.getElementById('tickerFontSize').value = '14';
-        document.getElementById('tickerBgColor').value = '#ff0000';
-        document.getElementById('tickerBgTransparent').checked = false;
+        document.getElementById('tickerTextFontColor').value = '#ffffff';
+        document.getElementById('tickerTitleBgColor').value = '#ffffff';
+        document.getElementById('tickerTextBgColor').value = '#ff0000';
+        document.getElementById('tickerTitleBgTransparent').checked = false;
+        document.getElementById('tickerTextBgTransparent').checked = false;
         document.getElementById('tickerScrollSpeed').value = '50';
         document.getElementById('tickerTitleBlink').checked = false;
       } else if (type === 'image') {
@@ -863,7 +1237,6 @@
       if (overlayStates[type]) updateOverlay(type);
     }
 
-    // Drag-to-resize controls and preview horizontally
     const resizeHandle = document.getElementById('resizeHandle');
     const controlsContainer = document.getElementById('controlsContainer');
     const preview = document.getElementById('preview');
@@ -918,6 +1291,11 @@
         document.getElementById('tickerTitleFontColor').addEventListener('input', () => updateOverlay(type));
         document.getElementById('tickerScrollSpeed').addEventListener('input', () => updateOverlay(type));
         document.getElementById('tickerTitleBlink').addEventListener('change', () => updateOverlay(type));
+      } else if (type === 'bible') {
+        document.getElementById('bibleReference').addEventListener('input', () => updateOverlay(type));
+        document.getElementById('bibleContent').addEventListener('input', () => updateOverlay(type));
+        document.getElementById('bibleRefFontSize').addEventListener('input', () => updateOverlay(type));
+        document.getElementById('bibleTextFontSize').addEventListener('input', () => updateOverlay(type));
       } else {
         document.getElementById(`${type}Text`)?.addEventListener('input', () => updateOverlay(type));
       }
@@ -934,6 +1312,117 @@
     });
 
     overlayTypes.forEach(type => resetOverlay(type));
+
+    // Update draggable functionality
+    function makeDraggable(element, type) {
+      let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+      let isDragging = false;
+      let initialTransform = '';
+      let initialLeft = '';
+      let initialBottom = '';
+      let initialTop = '';
+      
+      // Add mousedown event to the entire element
+      element.addEventListener('mousedown', dragMouseDown);
+      
+      function dragMouseDown(e) {
+        // Only start dragging if clicking on the element itself, not its children
+        if (e.target === element || element.contains(e.target)) {
+          e.preventDefault();
+          isDragging = true;
+          
+          // Store initial values for Bible, Lyrics, and Presenter lower-thirds
+          if (type === 'bible' || type === 'lyrics' || type === 'presenter') {
+            initialTransform = element.style.transform;
+            initialLeft = element.style.left;
+            initialBottom = element.style.bottom;
+            initialTop = element.style.top;
+            
+            // Convert percentage to pixels if needed
+            if (initialLeft.includes('%')) {
+              const canvas = document.getElementById('outputCanvas');
+              const canvasWidth = canvas.offsetWidth;
+              const elementWidth = element.offsetWidth;
+              const leftPercentage = parseFloat(initialLeft);
+              initialLeft = `${(canvasWidth * leftPercentage / 100) - (elementWidth / 2)}px`;
+            }
+            
+            // Remove transform and set absolute position
+            element.style.transform = 'none';
+            element.style.left = initialLeft;
+            element.style.bottom = 'auto';
+            element.style.top = initialTop || `${element.offsetTop}px`;
+          }
+          
+          // Get the mouse cursor position at startup
+          pos3 = e.clientX;
+          pos4 = e.clientY;
+          
+          // Add event listeners to document
+          document.addEventListener('mouseup', closeDragElement);
+          document.addEventListener('mousemove', elementDrag);
+          
+          // Bring element to front
+          element.classList.add('dragging');
+          
+          // Prevent text selection during drag
+          element.style.pointerEvents = 'none';
+        }
+      }
+      
+      function elementDrag(e) {
+        if (!isDragging) return;
+        
+        e.preventDefault();
+        
+        // Calculate the new cursor position
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        
+        // Get the current position
+        const currentTop = element.offsetTop;
+        const currentLeft = element.offsetLeft;
+        
+        // Calculate new position
+        const newTop = currentTop - pos2;
+        const newLeft = currentLeft - pos1;
+        
+        // Get canvas boundaries
+        const canvas = document.getElementById('outputCanvas');
+        const canvasRect = canvas.getBoundingClientRect();
+        const elementRect = element.getBoundingClientRect();
+        
+        // Calculate boundaries
+        const maxTop = canvasRect.height - elementRect.height;
+        const maxLeft = canvasRect.width - elementRect.width;
+        
+        // Set the element's new position with boundary checks
+        element.style.top = `${Math.max(0, Math.min(newTop, maxTop))}px`;
+        element.style.left = `${Math.max(0, Math.min(newLeft, maxLeft))}px`;
+      }
+      
+      function closeDragElement() {
+        if (!isDragging) return;
+        
+        isDragging = false;
+        
+        // Remove event listeners from document
+        document.removeEventListener('mouseup', closeDragElement);
+        document.removeEventListener('mousemove', elementDrag);
+        
+        // Restore element state
+        element.classList.remove('dragging');
+        element.style.pointerEvents = 'auto';
+        
+        // For Bible, Lyrics, and Presenter lower-thirds, maintain the new position
+        if (type === 'bible' || type === 'lyrics' || type === 'presenter') {
+          element.style.transform = 'none';
+          element.style.bottom = 'auto';
+        }
+      }
+    }
   </script>
 </body>
 </html>
