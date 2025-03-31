@@ -554,7 +554,7 @@ body {
   .header-group {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 50px;
     margin-bottom: 8px;
   }
   
@@ -683,5 +683,5 @@ body {
   #lyricsSegmentControls {
     position: absolute;
     transform: translateY(100%);
-    margin-top: 12px; /* Increased from 4px to 12px for more spacing */
+    margin-top: 60px; /* Increased from 4px to 12px for more spacing */
   }
