@@ -685,3 +685,45 @@ body {
     transform: translateY(100%);
     margin-top: 60px; /* Increased from 4px to 12px for more spacing */
   }
+
+  /* All existing styles remain the same until we add the new ticker styles */
+
+/* Add these new styles for the ticker header */
+.ticker-header-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.ticker-header-group h3 {
+  margin: 0 !important;
+  flex-shrink: 0;
+}
+
+.ticker-header-group .control-group {
+  margin-bottom: 0;
+  padding-top: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.ticker-header-group label {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+.ticker-header-group input[type="checkbox"] {
+  margin: 0;
+}
+
+/* Dark mode support */
+.dark-mode .ticker-header-group .control-group {
+  color: #ddd;
+}
+
+
+/* All other existing styles remain unchanged */

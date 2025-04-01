@@ -18,6 +18,16 @@ function openLyricsModal() {
   const backdrop = document.getElementById('modalBackdrop');
   const songTitleInput = document.getElementById('modalSongTitle');
 
+  // Populate the song dropdown in the modal
+  const modalSongSelect = document.getElementById('modalSongSelect');
+  modalSongSelect.innerHTML = '<option value="">Select a Song</option>';
+  songs.forEach(song => {
+    const option = document.createElement('option');
+    option.value = song.title;
+    option.textContent = song.title;
+    modalSongSelect.appendChild(option);
+  });
+
   if (currentSongIndex >= 0 && songs[currentSongIndex]) {
     tempSong = JSON.parse(JSON.stringify(songs[currentSongIndex]));
     songTitleInput.value = tempSong.title;
@@ -29,6 +39,22 @@ function openLyricsModal() {
   renderSegments();
   modal.style.display = 'block';
   backdrop.style.display = 'block';
+}
+
+function selectSongInModal(title) {
+  if (!title) {
+    document.getElementById('modalSongTitle').value = '';
+    document.getElementById('segmentList').innerHTML = '';
+    tempSong = { title: '', segments: [{ type: 'Verse', content: '' }], activeSegmentIndex: 0 };
+    return;
+  }
+
+  const song = songs.find(s => s.title === title);
+  if (song) {
+    document.getElementById('modalSongTitle').value = song.title;
+    tempSong = JSON.parse(JSON.stringify(song));
+    renderSegments();
+  }
 }
 
 function closeLyricsModal(apply) {

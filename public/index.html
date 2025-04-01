@@ -240,18 +240,16 @@
               <label for="tickerScrollSpeed">Scroll Speed (px/s)</label>
               <input type="number" id="tickerScrollSpeed" min="10" max="100" value="50">
             </div>
+            <div class="control-group" data-tippy-content="Toggle title blink animation" style="flex: none; min-width: auto;">
+              <label for="tickerTitleBlink">Blink Title</label>
+              <input type="checkbox" id="tickerTitleBlink">
+            </div>
             <button onclick="resetOverlay('ticker')" style="margin: 0;">
               <i class="fas fa-undo"></i> Reset
             </button>
           </div>
           <div class="control-group-container">
-            <div class="sub-header-group">
-              <h3 style="margin: 0;">Ticker Title</h3>
-              <div class="control-group" data-tippy-content="Toggle title blink animation" style="flex: none; min-width: auto;">
-                <label for="tickerTitleBlink">Blink Title</label>
-                <input type="checkbox" id="tickerTitleBlink">
-              </div>
-            </div>
+            <h3 style="margin: 0;">Ticker Title</h3>
             <div class="control-group" data-tippy-content="Enter ticker title">
               <label for="tickerTitle">Title</label>
               <input type="text" id="tickerTitle" placeholder="e.g., News" value="News" maxlength="50" class="parallelogram-bg">
@@ -321,6 +319,12 @@
           <div class="modal-header">
             <h3>Manage Songs & Segments</h3>
             <button class="modal-close" onclick="closeLyricsModal(false)">✕</button>
+          </div>
+          <div class="control-group" style="margin-bottom: 12px;">
+            <label for="modalSongSelect">Select Song</label>
+            <select id="modalSongSelect" onchange="selectSongInModal(this.value)" class="parallelogram-bg">
+              <option value="">Select a Song</option>
+            </select>
           </div>
           <div class="control-group" style="margin-bottom: 12px;">
             <label for="modalSongTitle">Song Title</label>
