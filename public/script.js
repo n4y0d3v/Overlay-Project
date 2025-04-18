@@ -1,3 +1,4 @@
+// script.js
 const socket = io();
 let overlayId = null;
 const overlayTypes = ['bible', 'lyrics', 'presenter', 'ticker', 'image'];
@@ -9,17 +10,21 @@ const overlayStates = {
   image: false
 };
 const overlayElements = {};
-let songs = [];
+let songs = JSON.parse(localStorage.getItem('songs')) || [];
 let currentSongIndex = -1;
 let tempSong = { title: '', segments: [], activeSegmentIndex: 0 };
+let lastUpdate = 0;
+
+function sanitizeText(text) {
+  return text.replace(/</g, '<').replace(/>/g, '>');
+}
 
 function openLyricsModal() {
   const modal = document.getElementById('lyricsModal');
   const backdrop = document.getElementById('modalBackdrop');
   const songTitleInput = document.getElementById('modalSongTitle');
-
-  // Populate the song dropdown in the modal
   const modalSongSelect = document.getElementById('modalSongSelect');
+
   modalSongSelect.innerHTML = '<option value="">Select a Song</option>';
   songs.forEach(song => {
     const option = document.createElement('option');
@@ -31,9 +36,11 @@ function openLyricsModal() {
   if (currentSongIndex >= 0 && songs[currentSongIndex]) {
     tempSong = JSON.parse(JSON.stringify(songs[currentSongIndex]));
     songTitleInput.value = tempSong.title;
+    modalSongSelect.value = tempSong.title;
   } else {
     tempSong = { title: '', segments: [{ type: 'Verse', content: '' }], activeSegmentIndex: 0 };
     songTitleInput.value = '';
+    modalSongSelect.value = '';
   }
 
   renderSegments();
@@ -42,17 +49,18 @@ function openLyricsModal() {
 }
 
 function selectSongInModal(title) {
+  const songTitleInput = document.getElementById('modalSongTitle');
   if (!title) {
-    document.getElementById('modalSongTitle').value = '';
-    document.getElementById('segmentList').innerHTML = '';
+    songTitleInput.value = '';
     tempSong = { title: '', segments: [{ type: 'Verse', content: '' }], activeSegmentIndex: 0 };
+    renderSegments();
     return;
   }
 
   const song = songs.find(s => s.title === title);
   if (song) {
-    document.getElementById('modalSongTitle').value = song.title;
     tempSong = JSON.parse(JSON.stringify(song));
+    songTitleInput.value = tempSong.title;
     renderSegments();
   }
 }
@@ -64,23 +72,28 @@ function closeLyricsModal(apply) {
   backdrop.style.display = 'none';
 
   if (apply) {
-    tempSong.title = document.getElementById('modalSongTitle').value.trim();
+    tempSong.title = sanitizeText(document.getElementById('modalSongTitle').value.trim());
     if (!tempSong.title) {
       alert('Please enter a song title.');
       return;
     }
 
     const existingSongIndex = songs.findIndex(s => s.title === tempSong.title);
-    if (existingSongIndex >= 0) {
+    if (existingSongIndex >= 0 && existingSongIndex !== currentSongIndex) {
       if (confirm(`A song titled "${tempSong.title}" already exists. Overwrite it?`)) {
         songs[existingSongIndex] = tempSong;
         currentSongIndex = existingSongIndex;
       }
     } else {
-      songs.push(tempSong);
-      currentSongIndex = songs.length - 1;
+      if (existingSongIndex === -1) {
+        songs.push(tempSong);
+        currentSongIndex = songs.length - 1;
+      } else {
+        songs[currentSongIndex] = tempSong;
+      }
     }
 
+    localStorage.setItem('songs', JSON.stringify(songs));
     updateSongDropdown();
     selectSong(tempSong.title);
   }
@@ -94,6 +107,7 @@ function addSegment() {
 function newSong() {
   tempSong = { title: '', segments: [{ type: 'Verse', content: '' }], activeSegmentIndex: 0 };
   document.getElementById('modalSongTitle').value = '';
+  document.getElementById('modalSongSelect').value = '';
   currentSongIndex = -1;
   renderSegments();
 }
@@ -115,13 +129,13 @@ function renderSegments() {
     segmentItem.className = 'segment-item';
     segmentItem.innerHTML = `
       <div class="segment-header">
-        <select onchange="updateSegmentType(${index}, this.value)">
+        <select onchange="updateSegmentType(${index}, this.value)" aria-label="Segment type">
           <option value="Verse" ${segment.type === 'Verse' ? 'selected' : ''}>Verse</option>
           <option value="Chorus" ${segment.type === 'Chorus' ? 'selected' : ''}>Chorus</option>
         </select>
-        <button onclick="removeSegment(${index})"><i class="fas fa-trash"></i></button>
+        <button onclick="removeSegment(${index})" title="Remove segment"><i class="fas fa-trash"></i></button>
       </div>
-      <textarea class="large-text" rows="3" maxlength="500" oninput="updateSegmentContent(${index}, this.value)">${segment.content}</textarea>
+      <textarea class="large-text" rows="3" maxlength="500" oninput="updateSegmentContent(${index}, this.value)" aria-label="Segment content">${sanitizeText(segment.content)}</textarea>
     `;
     if (index === tempSong.activeSegmentIndex) {
       segmentItem.style.background = '#e0f0ff';
@@ -135,7 +149,7 @@ function updateSegmentType(index, type) {
 }
 
 function updateSegmentContent(index, content) {
-  tempSong.segments[index].content = content;
+  tempSong.segments[index].content = sanitizeText(content);
   if (index === tempSong.activeSegmentIndex) {
     updateOverlay('lyrics');
   }
@@ -146,6 +160,7 @@ function setActiveSegment(index) {
     tempSong.activeSegmentIndex = index;
     if (currentSongIndex >= 0 && songs[currentSongIndex] && songs[currentSongIndex].title === tempSong.title) {
       songs[currentSongIndex].activeSegmentIndex = index;
+      localStorage.setItem('songs', JSON.stringify(songs));
     }
     document.getElementById('lyricsText').value = tempSong.segments[index].content;
     updateOverlay('lyrics');
@@ -171,6 +186,7 @@ function nextSegmentControl() {
     if (song.activeSegmentIndex < song.segments.length - 1) {
       song.activeSegmentIndex++;
       document.getElementById('lyricsText').value = song.segments[song.activeSegmentIndex].content;
+      localStorage.setItem('songs', JSON.stringify(songs));
       updateOverlay('lyrics');
     }
   }
@@ -182,6 +198,7 @@ function prevSegmentControl() {
     if (song.activeSegmentIndex > 0) {
       song.activeSegmentIndex--;
       document.getElementById('lyricsText').value = song.segments[song.activeSegmentIndex].content;
+      localStorage.setItem('songs', JSON.stringify(songs));
       updateOverlay('lyrics');
     }
   }
@@ -215,49 +232,37 @@ function selectSong(title) {
   }
 }
 
-async function fetchBibleText(input) {
+async function fetchBibleText(input, version) {
   try {
-    const cleanedInput = input.replace(/\s+/g, ' ').trim().toLowerCase();
-    const rangeMatch = cleanedInput.match(/([a-zA-Z\s]+)\s*(\d+:\d+)(?:\s*[-–]\s*(\d+:\d+))?/);
-    const singleMatch = cleanedInput.match(/([a-zA-Z\s]+)\s*(\d+:\d+)/);
-
-    if (!singleMatch) {
-      return { text: input, ref: input };
-    }
-
-    let book = singleMatch[1].trim();
-    let startVerse = singleMatch[2];
-    let endVerse = rangeMatch && rangeMatch[3] ? rangeMatch[3] : null;
-
-    book = bookMap[book] || bookMap[book.replace(/\s/g, '')] || 'JHN';
-    const startRef = `${book}.${startVerse}`;
-    const apiRef = endVerse ? `${startRef}-${book}.${endVerse}` : startRef;
-
-    const response = await fetch(`https://api.scripture.api.bible/v1/bibles/${BIBLE_ID}/passages/${apiRef}?content-type=text`, {
-      headers: { 'api-key': API_KEY }
-    });
-
+    if (!input.trim()) throw new Error('Reference is empty');
+    const response = await fetch(`/api/bible?ref=${encodeURIComponent(input)}&version=${version}`);
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     const data = await response.json();
-    const text = data.data.content.replace(/\n/g, ' ').trim();
-    const ref = data.data.reference;
-    document.getElementById('bibleContent').value = text;
-    return { text, ref };
+    if (data.error) throw new Error(data.error);
+    document.getElementById('bibleContent').value = data.text;
+    return { text: data.text, ref: data.ref };
   } catch (error) {
     console.error('Error fetching Bible text:', error);
-    document.getElementById('bibleContent').value = `Error: Invalid reference (${input})`;
-    return { text: `Error: Invalid reference (${input})`, ref: input };
+    const errorMsg = `Error: Invalid reference (${input})`;
+    document.getElementById('bibleContent').value = errorMsg;
+    alert(errorMsg);
+    return { text: errorMsg, ref: input };
   }
 }
 
 function fetchBibleVerse() {
   const reference = document.getElementById('bibleReference').value;
-  fetchBibleText(reference).then(bibleData => {
+  const version = document.getElementById('bibleVersion').value;
+  fetchBibleText(reference, version).then(bibleData => {
     updateOverlay('bible');
   });
 }
 
 function updateOverlay(type) {
+  const now = Date.now();
+  if (now - lastUpdate < 500) return;
+  lastUpdate = now;
+
   overlayId = overlayId || Math.random().toString(36).substring(2, 7);
   const data = { id: overlayId, type };
 
@@ -274,8 +279,8 @@ function updateOverlay(type) {
     }
   } else {
     if (type === 'bible') {
-      data.ref = document.getElementById('bibleReference').value;
-      data.text = document.getElementById('bibleContent').value;
+      data.ref = sanitizeText(document.getElementById('bibleReference').value);
+      data.text = sanitizeText(document.getElementById('bibleContent').value);
       data.refFontSize = document.getElementById('bibleRefFontSize').value + 'px';
       data.textFontSize = document.getElementById('bibleTextFontSize').value + 'px';
       data.refFontColor = document.getElementById('bibleRefFontColor').value;
@@ -285,8 +290,8 @@ function updateOverlay(type) {
     } else if (type === 'lyrics') {
       const selectedSongTitle = document.getElementById('lyricsTitle').value;
       const song = songs.find(s => s.title === selectedSongTitle);
-      data.title = selectedSongTitle;
-      data.text = song && song.segments[song.activeSegmentIndex] ? song.segments[song.activeSegmentIndex].content : '';
+      data.title = sanitizeText(selectedSongTitle);
+      data.text = song && song.segments[song.activeSegmentIndex] ? sanitizeText(song.segments[song.activeSegmentIndex].content) : '';
       data.titleFontSize = document.getElementById('lyricsTitleFontSize').value + 'px';
       data.textFontSize = document.getElementById('lyricsTextFontSize').value + 'px';
       data.titleFontColor = document.getElementById('lyricsTitleFontColor').value;
@@ -294,8 +299,8 @@ function updateOverlay(type) {
       data.titleBgColor = document.getElementById('lyricsTitleBgTransparent').checked ? 'transparent' : document.getElementById('lyricsTitleBgColor').value;
       data.textBgColor = document.getElementById('lyricsTextBgTransparent').checked ? 'transparent' : document.getElementById('lyricsTextBgColor').value;
     } else if (type === 'presenter') {
-      data.title = document.getElementById('presenterTitle').value;
-      data.text = document.getElementById('presenterText').value;
+      data.title = sanitizeText(document.getElementById('presenterTitle').value);
+      data.text = sanitizeText(document.getElementById('presenterText').value);
       data.titleFontSize = document.getElementById('presenterTitleFontSize').value + 'px';
       data.textFontSize = document.getElementById('presenterTextFontSize').value + 'px';
       data.titleFontColor = document.getElementById('presenterTitleFontColor').value;
@@ -303,8 +308,8 @@ function updateOverlay(type) {
       data.titleBgColor = document.getElementById('presenterTitleBgTransparent').checked ? 'transparent' : document.getElementById('presenterTitleBgColor').value;
       data.textBgColor = document.getElementById('presenterTextBgTransparent').checked ? 'transparent' : document.getElementById('presenterTextBgColor').value;
     } else if (type === 'ticker') {
-      data.title = document.getElementById('tickerTitle').value;
-      data.text = document.getElementById('tickerText').value;
+      data.title = sanitizeText(document.getElementById('tickerTitle').value);
+      data.text = sanitizeText(document.getElementById('tickerText').value);
       data.titleFontSize = document.getElementById('tickerTitleFontSize').value + 'px';
       data.textFontSize = document.getElementById('tickerTextFontSize').value + 'px';
       data.titleFontColor = document.getElementById('tickerTitleFontColor').value;
@@ -325,7 +330,7 @@ function renderOverlay(data) {
   if (!overlay) {
     overlay = document.createElement('div');
     overlay.id = `overlay-${data.type}`;
-    overlay.className = 'overlay';
+    overlay.className = `overlay ${data.type}-overlay`;
     overlayElements[data.type] = overlay;
     outputCanvas.appendChild(overlay);
     if (data.type !== 'ticker') {
@@ -342,8 +347,8 @@ function renderOverlay(data) {
     }
     overlay.innerHTML = `
       <div class="bible-lower-third">
-        <div class="bible-reference" style="color: ${data.refFontColor}; font-size: ${data.refFontSize}; background: ${data.refBgColor}">${data.ref}</div>
-        <div class="bible-text" style="color: ${data.textFontColor}; font-size: ${data.textFontSize}; background: ${data.textBgColor}">${data.text}</div>
+        <div class="bible-reference" style="font-size: ${data.refFontSize}; color: ${data.refFontColor}; ${data.refBgColor === 'transparent' ? '' : `background: ${data.refBgColor};`}">${data.ref}</div>
+        <div class="bible-text" style="font-size: ${data.textFontSize}; color: ${data.textFontColor}; ${data.textBgColor === 'transparent' ? '' : `background: ${data.textBgColor};`}">${data.text}</div>
       </div>
     `;
   } else if (data.type === 'lyrics') {
@@ -354,9 +359,9 @@ function renderOverlay(data) {
       overlay.style.bottom = '120px';
     }
     overlay.innerHTML = `
-      <div class="bible-lower-third">
-        <div class="bible-reference" style="color: ${data.titleFontColor}; font-size: ${data.titleFontSize}; background: ${data.titleBgColor}">${data.title}</div>
-        <div class="bible-text" style="color: ${data.textFontColor}; font-size: ${data.textFontSize}; background: ${data.textBgColor}">${data.text}</div>
+      <div class="lyrics-lower-third">
+        <div class="lyrics-title" style="font-size: ${data.titleFontSize}; color: ${data.titleFontColor}; ${data.titleBgColor === 'transparent' ? '' : `background: ${data.titleBgColor};`}">${data.title}</div>
+        <div class="lyrics-content" style="font-size: ${data.textFontSize}; color: ${data.textFontColor}; ${data.textBgColor === 'transparent' ? '' : `background: ${data.textBgColor};`}">${data.text}</div>
       </div>
     `;
   } else if (data.type === 'presenter') {
@@ -367,9 +372,9 @@ function renderOverlay(data) {
       overlay.style.bottom = '120px';
     }
     overlay.innerHTML = `
-      <div class="bible-lower-third">
-        <div class="bible-reference" style="color: ${data.titleFontColor}; font-size: ${data.titleFontSize}; background: ${data.titleBgColor}">${data.title}</div>
-        <div class="bible-text" style="color: ${data.textFontColor}; font-size: ${data.textFontSize}; background: ${data.textBgColor}">${data.text}</div>
+      <div class="presenter-lower-third">
+        <div class="presenter-title" style="font-size: ${data.titleFontSize}; color: ${data.titleFontColor}; ${data.titleBgColor === 'transparent' ? '' : `background: ${data.titleBgColor};`}">${data.title}</div>
+        <div class="presenter-name" style="font-size: ${data.textFontSize}; color: ${data.textFontColor}; ${data.textBgColor === 'transparent' ? '' : `background: ${data.textBgColor};`}">${data.text}</div>
       </div>
     `;
   } else if (data.type === 'ticker') {
@@ -410,27 +415,14 @@ function renderOverlay(data) {
     const animationDuration = repeatedTextWidth / scrollSpeedPxPerSec;
 
     overlay.innerHTML = `
-      <div style="width: 15%; height: 100%; background: ${data.titleBgColor}; font-size: ${data.titleFontSize}; padding: 2px 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-        <span style="color: ${data.titleFontColor}; ${data.titleBlink ? 'animation: blink 1s step-end infinite;' : ''}">
-          ${data.title}
-        </span>
+      <div class="ticker-title" style="font-size: ${data.titleFontSize}; color: ${data.titleFontColor}; ${data.titleBgColor === 'transparent' ? '' : `background: ${data.titleBgColor};`} ${data.titleBlink ? 'animation: blink 1s step-end infinite;' : ''}">
+        ${data.title}
       </div>
-      <div style="width: 85%; height: 100%; background: ${data.textBgColor}; position: relative; overflow: hidden;">
-        <div id="tickerContent-${data.id}" style="color: ${data.textFontColor}; font-size: ${data.textFontSize}; white-space: nowrap; animation: scroll ${animationDuration}s linear infinite; padding: 2px 10px; display: inline-block; position: absolute; top: 0; left: 0;">
+      <div class="ticker-content" style="${data.textBgColor === 'transparent' ? '' : `background: ${data.textBgColor};`}">
+        <div class="ticker-text" style="font-size: ${data.textFontSize}; color: ${data.textFontColor}; animation: scroll ${animationDuration}s linear infinite;">
           ${repeatedText}
         </div>
       </div>
-    `;
-    overlay.innerHTML += `
-      <style>
-        @keyframes scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-${repeatedTextWidth}px); }
-        }
-        @keyframes blink {
-          50% { opacity: 0; }
-        }
-      </style>
     `;
   } else if (data.type === 'image') {
     overlay.style.left = '20px';
@@ -480,18 +472,23 @@ function updateMainToggleState() {
 }
 
 function copyOverlayUrl() {
-  if (!overlayId) return;
+  if (!overlayId) {
+    alert('No overlay active. Enable an overlay first.');
+    return;
+  }
   const url = `${window.location.origin}/overlay/${overlayId}`;
   navigator.clipboard.writeText(url).then(() => {
     alert('Overlay URL copied to clipboard!');
   }).catch(err => {
     console.error('Failed to copy URL:', err);
+    alert('Failed to copy URL.');
   });
 }
 
 function resetOverlay(type) {
   if (type === 'bible') {
     document.getElementById('bibleReference').value = 'John 3:16';
+    document.getElementById('bibleVersion').value = BIBLE_ID;
     document.getElementById('bibleContent').value = 'For God so loved the world...';
     document.getElementById('bibleRefFontSize').value = '12';
     document.getElementById('bibleTextFontSize').value = '12';
@@ -504,6 +501,7 @@ function resetOverlay(type) {
   } else if (type === 'lyrics') {
     songs = [];
     currentSongIndex = -1;
+    localStorage.setItem('songs', JSON.stringify(songs));
     updateSongDropdown();
     document.getElementById('lyricsText').value = '';
     document.getElementById('lyricsTitleFontSize').value = '12';
@@ -544,6 +542,57 @@ function resetOverlay(type) {
   if (overlayStates[type]) updateOverlay(type);
 }
 
+function makeDraggable(element, type) {
+  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  let isDragging = false;
+
+  element.addEventListener('mousedown', dragMouseDown);
+
+  function dragMouseDown(e) {
+    if (e.target === element || element.contains(e.target)) {
+      e.preventDefault();
+      isDragging = true;
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+      document.addEventListener('mouseup', closeDragElement);
+      document.addEventListener('mousemove', elementDrag);
+      element.classList.add('dragging');
+      element.style.transition = 'none';
+    }
+  }
+
+  function elementDrag(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+
+    const canvas = document.getElementById('outputCanvas');
+    const canvasRect = canvas.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+
+    let newTop = element.offsetTop - pos2;
+    let newLeft = element.offsetLeft - pos1;
+    newTop = Math.max(0, Math.min(newTop, canvasRect.height - elementRect.height));
+    newLeft = Math.max(0, Math.min(newLeft, canvasRect.width - elementRect.width));
+
+    element.style.top = `${newTop}px`;
+    element.style.left = `${newLeft}px`;
+    element.style.transform = 'none';
+    element.style.bottom = 'auto';
+  }
+
+  function closeDragElement() {
+    isDragging = false;
+    document.removeEventListener('mouseup', closeDragElement);
+    document.removeEventListener('mousemove', elementDrag);
+    element.classList.remove('dragging');
+    element.style.transition = '';
+  }
+}
+
 const resizeHandle = document.getElementById('resizeHandle');
 const controlsContainer = document.getElementById('controlsContainer');
 const preview = document.getElementById('preview');
@@ -561,7 +610,6 @@ document.addEventListener('mousemove', (e) => {
     e.preventDefault();
     const deltaX = e.clientX - initialX;
     const newControlsWidth = initialControlsWidth + deltaX;
-
     const containerWidth = window.innerWidth - 32;
     const minWidth = 200;
     const maxControlsWidth = containerWidth - minWidth - 8;
@@ -578,13 +626,14 @@ document.addEventListener('mouseup', () => {
 function toggleDarkMode() {
   const isDark = document.body.classList.toggle('dark-mode');
   localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
-}
-
-if (localStorage.getItem('darkMode') === 'enabled') {
-  document.body.classList.add('dark-mode');
+  socket.emit('darkMode', { overlayId, darkMode: isDark });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem('darkMode') === 'enabled') {
+    document.body.classList.add('dark-mode');
+  }
+
   overlayTypes.forEach(type => {
     if (type === 'ticker') {
       document.getElementById('tickerTitle').addEventListener('input', () => updateOverlay(type));
@@ -596,6 +645,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (type === 'bible') {
       document.getElementById('bibleReference').addEventListener('input', () => updateOverlay(type));
       document.getElementById('bibleContent').addEventListener('input', () => updateOverlay(type));
+      document.getElementById('bibleVersion').addEventListener('change', () => updateOverlay(type));
       document.getElementById('bibleRefFontSize').addEventListener('input', () => updateOverlay(type));
       document.getElementById('bibleTextFontSize').addEventListener('input', () => updateOverlay(type));
       document.getElementById('bibleRefFontColor').addEventListener('input', () => updateOverlay(type));
@@ -629,87 +679,11 @@ document.addEventListener('DOMContentLoaded', () => {
     theme: 'light',
     placement: 'top',
     arrow: true,
-  });
-});
-
-function makeDraggable(element, type) {
-  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-  let isDragging = false;
-  let initialTransform = '';
-  let initialLeft = '';
-  let initialBottom = '';
-  let initialTop = '';
-
-  element.addEventListener('mousedown', dragMouseDown);
-
-  function dragMouseDown(e) {
-    if (e.target === element || element.contains(e.target)) {
-      e.preventDefault();
-      isDragging = true;
-
-      if (type === 'bible' || type === 'lyrics' || type === 'presenter') {
-        initialTransform = element.style.transform;
-        initialLeft = element.style.left;
-        initialBottom = element.style.bottom;
-        initialTop = element.style.top;
-
-        if (initialLeft.includes('%')) {
-          const canvas = document.getElementById('outputCanvas');
-          const canvasWidth = canvas.offsetWidth;
-          const elementWidth = element.offsetWidth;
-          const leftPercentage = parseFloat(initialLeft);
-          initialLeft = `${(canvasWidth * leftPercentage / 100) - (elementWidth / 2)}px`;
-        }
-
-        element.style.transform = 'none';
-        element.style.left = initialLeft;
-        element.style.bottom = 'auto';
-        element.style.top = initialTop || `${element.offsetTop}px`;
-      }
-
-      pos3 = e.clientX;
-      pos4 = e.clientY;
-
-      document.addEventListener('mouseup', closeDragElement);
-      document.addEventListener('mousemove', elementDrag);
-
-      element.classList.add('dragging');
-      element.style.pointerEvents = 'none';
+    onShow(instance) {
+      instance.popper.setAttribute('role', 'tooltip');
+      instance.popper.setAttribute('aria-live', 'polite');
     }
-  }
+  });
 
-  function elementDrag(e) {
-    if (!isDragging) return;
-
-    e.preventDefault();
-
-    pos1 = pos3 - e.clientX;
-    pos2 = pos4 - e.clientY;
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-
-    const currentTop = element.offsetTop;
-    const currentLeft = element.offsetLeft;
-
-    const newTop = currentTop - pos2;
-    const newLeft = currentLeft - pos1;
-
-    const canvas = document.getElementById('outputCanvas');
-    const canvasRect = canvas.getBoundingClientRect();
-    const elementRect = element.getBoundingClientRect();
-
-    const maxTop = canvasRect.height - elementRect.height;
-    const maxLeft = canvasRect.width - elementRect.width;
-
-    element.style.top = `${Math.max(0, Math.min(newTop, maxTop))}px`;
-    element.style.left = `${Math.max(0, Math.min(newLeft, maxLeft))}px`;
-  }
-
-  function closeDragElement() {
-    isDragging = false;
-    document.removeEventListener('mouseup', closeDragElement);
-    document.removeEventListener('mousemove', elementDrag);
-    element.classList.remove('dragging');
-    element.style.pointerEvents = 'auto';
-  }
-}
+  updateSongDropdown();
+});
