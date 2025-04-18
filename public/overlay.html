@@ -27,6 +27,103 @@
   <div id="overlayCanvas"></div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="script.js"></script>
+  <script>
+    const socket = io();
+    const id = window.location.pathname.split('/').pop();
+    console.log('Connecting to overlay:', id);
+    socket.emit('join', id);
+
+    function updateOverlay(data) {
+      console.log('Updating overlay with data:', data);
+      const overlay = document.getElementById('overlay');
+      overlay.style.opacity = '0';
+      
+      setTimeout(() => {
+        overlay.innerHTML = '';
+        
+        if (data.type === 'bible') {
+          overlay.style.width = '90%';
+          overlay.style.left = '50%';
+          overlay.style.transform = 'translateX(-50%)';
+          overlay.style.bottom = '120px';
+          overlay.innerHTML = `
+            <div class="bible-lower-third">
+              <div class="bible-reference" style="color: ${data.refFontColor}; font-size: ${data.refFontSize}; background: ${data.refBgColor}">${data.ref}</div>
+              <div class="bible-text" style="color: ${data.textFontColor}; font-size: ${data.textFontSize}; background: ${data.textBgColor}">${data.text}</div>
+            </div>
+          `;
+        } else if (data.type === 'lyrics') {
+          overlay.style.width = '90%';
+          overlay.style.left = '50%';
+          overlay.style.transform = 'translateX(-50%)';
+          overlay.style.bottom = '120px';
+          overlay.innerHTML = `
+            <div class="bible-lower-third">
+              <div class="bible-reference" style="color: ${data.titleFontColor}; font-size: ${data.titleFontSize}; background: ${data.titleBgColor}">${data.title}</div>
+              <div class="bible-text" style="color: ${data.textFontColor}; font-size: ${data.textFontSize}; background: ${data.textBgColor}">${data.text}</div>
+            </div>
+          `;
+        } else if (data.type === 'presenter') {
+          overlay.style.width = '90%';
+          overlay.style.left = '50%';
+          overlay.style.transform = 'translateX(-50%)';
+          overlay.style.bottom = '120px';
+          overlay.innerHTML = `
+            <div class="bible-lower-third">
+              <div class="bible-reference" style="color: ${data.titleFontColor}; font-size: ${data.titleFontSize}; background: ${data.titleBgColor}">${data.title}</div>
+              <div class="bible-text" style="color: ${data.textFontColor}; font-size: ${data.textFontSize}; background: ${data.textBgColor}">${data.text}</div>
+            </div>
+          `;
+        } else if (data.type === 'ticker') {
+          overlay.style.position = 'fixed';
+          overlay.style.bottom = '0';
+          overlay.style.left = '0';
+          overlay.style.width = '100%';
+          const fontSizePx = parseInt(data.textFontSize, 10);
+          const tickerHeight = fontSizePx + 16;
+          overlay.style.height = `${tickerHeight}px`;
+          overlay.style.overflow = 'hidden';
+          overlay.style.display = 'flex';
+
+          const repeatedText = (data.text + ' • ').repeat(2);
+          const scrollSpeedPxPerSec = data.scrollSpeed || 50;
+          const textWidth = repeatedText.length * (fontSizePx * 0.6);
+          const animationDuration = textWidth / scrollSpeedPxPerSec;
+
+          overlay.innerHTML = `
+            <div class="ticker">
+              <div class="ticker-title" style="color: ${data.titleFontColor}; font-size: ${data.titleFontSize}; background: ${data.titleBgColor}">
+                <span style="${data.titleBlink ? 'animation: blink 1s step-end infinite;' : ''}">${data.title}</span>
+              </div>
+              <div class="ticker-content" style="background: ${data.textBgColor}">
+                <div class="ticker-text" style="color: ${data.textFontColor}; font-size: ${data.textFontSize}; animation: scroll ${animationDuration}s linear infinite;">
+                  ${repeatedText}
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (data.type === 'image') {
+          overlay.style.left = '20px';
+          overlay.style.top = '20px';
+          overlay.innerHTML = `<img src="${data.image}" style="width: 200px; height: 200px;">`;
+        }
+        
+        overlay.style.opacity = '1';
+      }, 300);
+    }
+
+    // Listen for both 'update' and 'customize' events
+    socket.on('update', updateOverlay);
+    socket.on('customize', updateOverlay);
+
+    // Handle connection errors
+    socket.on('connect_error', (error) => {
+      console.error('Connection error:', error);
+    });
+
+    socket.on('error', (error) => {
+      console.error('Socket error:', error);
+    });
+  </script>
 </body>
 </html>
