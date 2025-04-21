@@ -300,7 +300,7 @@ button i {
   position: relative;
   width: 40%;
   background: #e8ecef;
-  overflow: hidden; 
+  overflow: hidden;s
   border-radius: 6px;
   flex: 1 1 40%;
   min-width: 200px;
@@ -309,7 +309,6 @@ button i {
   justify-content: center;
   align-items: center;
 }
-
 
 #outputCanvas {
   width: 100%;
