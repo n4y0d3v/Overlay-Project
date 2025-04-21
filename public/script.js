@@ -16,7 +16,7 @@ let tempSong = { title: '', segments: [], activeSegmentIndex: 0 };
 let lastUpdate = 0;
 
 function sanitizeText(text) {
-  return text.replace(/</g, '<').replace(/>/g, '>');
+  return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function openLyricsModal() {
@@ -415,11 +415,13 @@ function renderOverlay(data) {
     const animationDuration = repeatedTextWidth / scrollSpeedPxPerSec;
 
     overlay.innerHTML = `
-      <div class="ticker-title" style="font-size: ${data.titleFontSize}; color: ${data.titleFontColor}; ${data.titleBgColor === 'transparent' ? '' : `background: ${data.titleBgColor};`} ${data.titleBlink ? 'animation: blink 1s step-end infinite;' : ''}">
-        ${data.title}
+      <div style="width: 15%; height: 100%; font-size: ${data.titleFontSize}; padding: 2px 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; ${data.titleBgColor === 'transparent' ? '' : `background: ${data.titleBgColor};`}">
+        <span style="color: ${data.titleFontColor}; ${data.titleBlink ? 'animation: blink 1s step-end infinite;' : ''}">
+          ${data.title}
+        </span>
       </div>
-      <div class="ticker-content" style="${data.textBgColor === 'transparent' ? '' : `background: ${data.textBgColor};`}">
-        <div class="ticker-text" style="font-size: ${data.textFontSize}; color: ${data.textFontColor}; animation: scroll ${animationDuration}s linear infinite;">
+      <div style="width: 85%; height: 100%; position: relative; overflow: hidden; ${data.textBgColor === 'transparent' ? '' : `background: ${data.textBgColor};`}">
+        <div id="tickerContent-${data.id}" style="color: ${data.textFontColor}; font-size: ${data.textFontSize}; white-space: nowrap; animation: scroll ${animationDuration}s linear infinite; padding: 2px 10px; display: inline-block; position: absolute; top: 0; left: 0;">
           ${repeatedText}
         </div>
       </div>

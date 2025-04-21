@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Streaming Overlay Control Panel</title>
+  <title>Overlay MVP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta charset="UTF-8">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light.css" />
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="container">
     <div class="title-bar">
       <div class="title-bar-left">
-        <h2>Create Your Overlay</h2>
+        <h1>Create Your Overlay</h1>
       </div>
       <div class="title-bar-center">
-        <label class="switch">
+        <label class="switch" aria-label="Toggle all overlays">
           <input type="checkbox" id="mainToggleOverlays" onchange="toggleAllOverlays()">
           <span class="slider"></span>
         </label>
@@ -23,84 +26,93 @@
         <button id="copyOverlayUrl" title="Copy Overlay URL" onclick="copyOverlayUrl()">
           <i class="fas fa-copy"></i> Copy URL
         </button>
-        <button id="darkModeToggle" onclick="toggleDarkMode()">
-          <i class="fas fa-adjust"></i> Toggle Dark Mode
+        <button id="darkModeToggle" title="Toggle Dark Mode" onclick="toggleDarkMode()">
+          <i class="fas fa-adjust"></i> Dark Mode
         </button>
       </div>
     </div>
     <div class="content">
       <div id="controlsContainer">
-        <!-- Bible Overlay -->
+        <!-- Bible Lower-Third -->
         <div class="overlay-section">
           <div class="header-group">
-            <h2 style="margin: 0;">Bible Lower-Third</h2>
-            <label class="switch" style="margin: 0;">
+            <h2>Bible Lower-Third</h2>
+            <label class="switch" aria-label="Toggle Bible overlay">
               <input type="checkbox" id="toggleBible" onchange="toggleOverlay('bible')">
               <span class="slider"></span>
             </label>
-            <button onclick="resetOverlay('bible')" style="margin: 0;">
+            <button onclick="resetOverlay('bible')" title="Reset Bible overlay">
               <i class="fas fa-undo"></i> Reset
             </button>
           </div>
           <div class="control-group-container">
             <h3>Verse Reference</h3>
-            <div class="control-group" style="flex: 2;" data-tippy-content="Enter a Bible verse reference (e.g., John 3:16)">
+            <div class="control-group" data-tippy-content="Enter a Bible verse reference (e.g., John 3:16)">
               <label for="bibleReference">Reference</label>
-              <input type="text" id="bibleReference" placeholder="e.g., John 3:16" value="John 3:16" maxlength="50" class="parallelogram-bg">
-              <button onclick="fetchBibleVerse()" style="margin-top: 8px;">
+              <input type="text" id="bibleReference" placeholder="e.g., John 3:16" value="John 3:16" maxlength="50" class="text-input parallelogram-bg">
+              <button onclick="fetchBibleVerse()" title="Fetch Bible verse">
                 <i class="fas fa-download"></i> Fetch Verse
               </button>
             </div>
+            <div class="control-group" data-tippy-content="Select Bible version">
+              <label for="bibleVersion">Version</label>
+              <select id="bibleVersion" class="select-input">
+                <option value="de4e12af7f28f599-01">KJV</option>
+                <option value="06125adad2d5898a-01">NIV</option>
+                <option value="1e6411745362a47d-01">ESV</option>
+              </select>
+            </div>
             <div class="control-group" data-tippy-content="Set reference font size in pixels (10-50)">
               <label for="bibleRefFontSize">Font Size</label>
-              <input type="number" id="bibleRefFontSize" min="10" max="50" value="12">
+              <input type="number" id="bibleRefFontSize" min="10" max="50" value="12" class="number-input">
             </div>
             <div class="control-group" data-tippy-content="Select reference text color">
               <label for="bibleRefFontColor">Font Color</label>
-              <input type="color" id="bibleRefFontColor" value="#ffffff">
+              <input type="color" id="bibleRefFontColor" value="#ffffff" class="color-input">
             </div>
             <div class="control-group" data-tippy-content="Select reference background color">
               <label for="bibleRefBgColor">Bg Color</label>
-              <input type="color" id="bibleRefBgColor" value="#28a745">
+              <input type="color" id="bibleRefBgColor" value="#28a745" class="color-input">
             </div>
             <div class="control-group" data-tippy-content="Make reference background transparent">
               <label for="bibleRefBgTransparent">Transparent</label>
-              <input type="checkbox" id="bibleRefBgTransparent">
+              <input type="checkbox" id="bibleRefBgTransparent" class="checkbox-input">
             </div>
           </div>
           <div class="control-group-container">
             <h3>Verse Content</h3>
-            <div class="control-group" data-tippy-content="Enter verse content manually or fetch from API" style="flex: 2;">
+            <div class="control-group large-text-group" data-tippy-content="Enter verse content manually or fetch from API">
               <label for="bibleContent">Content</label>
-              <textarea id="bibleContent" placeholder="Enter verse or fetch..." value="For God so loved the world..." maxlength="500" class="rectangle-bg large-text"></textarea>
+              <textarea id="bibleContent" placeholder="Enter verse or fetch..." maxlength="500" class="large-text rectangle-bg">For God so loved the world...</textarea>
             </div>
-            <div class="control-group" data-tippy-content="Set content font size in pixels (10-50)" style="flex: 1;">
+            <div class="control-group" data-tippy-content="Set content font size in pixels (10-50)">
               <label for="bibleTextFontSize">Font Size</label>
-              <input type="number" id="bibleTextFontSize" min="10" max="50" value="12">
+              <input type="number" id="bibleTextFontSize" min="10" max="50" value="12" class="number-input">
             </div>
-            <div class="control-group" data-tippy-content="Select content text color" style="flex: 1;">
+            <div class="control-group" data-tippy-content="Select content text color">
               <label for="bibleTextFontColor">Font Color</label>
-              <input type="color" id="bibleTextFontColor" value="#ffffff">
+              <input type="color" id="bibleTextFontColor" value="#ffffff" class="color-input">
             </div>
-            <div class="control-group" data-tippy-content="Select content background color" style="flex: 1;">
+            <div class="control-group" data-tippy-content="Select content background color">
               <label for="bibleTextBgColor">Bg Color</label>
-              <input type="color" id="bibleTextBgColor" value="#007bff">
+              <input type="color" id="bibleTextBgColor" value="#007bff" class="color-input">
             </div>
-            <div class="control-group" data-tippy-content="Make content background transparent" style="flex: 1;">
+            <div class="control-group" data-tippy-content="Make content background transparent">
               <label for="bibleTextBgTransparent">Transparent</label>
-              <input type="checkbox" id="bibleTextBgTransparent">
+              <input type="checkbox" id="bibleTextBgTransparent" class="checkbox-input">
             </div>
           </div>
         </div>
-        <!-- Lyrics Overlay -->
+
+        <!-- Lyrics Lower-Third -->
         <div class="overlay-section">
           <div class="header-group">
-            <h2 style="margin: 0;">Lyrics Lower-Third</h2>
-            <label class="switch" style="margin: 0;">
+            <h2>Lyrics Lower-Third</h2>
+            <label class="switch" aria-label="Toggle Lyrics overlay">
               <input type="checkbox" id="toggleLyrics" onchange="toggleOverlay('lyrics')">
               <span class="slider"></span>
             </label>
-            <button onclick="resetOverlay('lyrics')" style="margin: 0;">
+            <button onclick="resetOverlay('lyrics')" title="Reset Lyrics overlay">
               <i class="fas fa-undo"></i> Reset
             </button>
           </div>
@@ -108,40 +120,40 @@
             <h3>Lyrics Title</h3>
             <div class="control-group" data-tippy-content="Select song title">
               <label for="lyricsTitle">Title</label>
-              <select id="lyricsTitle" onchange="selectSong(this.value)" class="parallelogram-bg">
+              <select id="lyricsTitle" onchange="selectSong(this.value)" class="select-input parallelogram-bg">
                 <option value="">Select a Song</option>
               </select>
             </div>
             <div class="control-group" data-tippy-content="Set title font size in pixels (10-50)">
               <label for="lyricsTitleFontSize">Font Size</label>
-              <input type="number" id="lyricsTitleFontSize" min="10" max="50" value="12">
+              <input type="number" id="lyricsTitleFontSize" min="10" max="50" value="12" class="number-input">
             </div>
             <div class="control-group" data-tippy-content="Select title text color">
               <label for="lyricsTitleFontColor">Font Color</label>
-              <input type="color" id="lyricsTitleFontColor" value="#ffffff">
+              <input type="color" id="lyricsTitleFontColor" value="#ffffff" class="color-input">
             </div>
             <div class="control-group" data-tippy-content="Select title background color">
               <label for="lyricsTitleBgColor">Bg Color</label>
-              <input type="color" id="lyricsTitleBgColor" value="#28a745">
+              <input type="color" id="lyricsTitleBgColor" value="#28a745" class="color-input">
             </div>
             <div class="control-group" data-tippy-content="Make title background transparent">
               <label for="lyricsTitleBgTransparent">Transparent</label>
-              <input type="checkbox" id="lyricsTitleBgTransparent">
+              <input type="checkbox" id="lyricsTitleBgTransparent" class="checkbox-input">
             </div>
           </div>
           <div class="control-group-container">
             <h3>Lyrics Content</h3>
-            <div class="control-group" data-tippy-content="View current segment; manage segments in modal" style="flex: 2;">
+            <div class="control-group large-text-group" data-tippy-content="View current segment; manage segments in modal">
               <label for="lyricsText">Content</label>
-              <textarea id="lyricsText" placeholder="Select a song and manage segments..." disabled class="rectangle-bg large-text"></textarea>
-              <button onclick="openLyricsModal()" style="margin-top: 8px;">
+              <textarea id="lyricsText" placeholder="Select a song and manage segments..." disabled class="large-text rectangle-bg"></textarea>
+              <button onclick="openLyricsModal()" title="Manage songs and segments">
                 <i class="fas fa-list"></i> Manage Songs & Segments
               </button>
             </div>
-            <div class="control-group" data-tippy-content="Set content font size in pixels (10-50)" style="flex: 1; position: relative;">
+            <div class="control-group" data-tippy-content="Set content font size in pixels (10-50)">
               <label for="lyricsTextFontSize">Font Size</label>
-              <input type="number" id="lyricsTextFontSize" min="10" max="50" value="12">
-              <div class="segment-controls" id="lyricsSegmentControls">
+              <input type="number" id="lyricsTextFontSize" min="10" max="50" value="12" class="number-input">
+              <div class="segment-controls">
                 <button onclick="prevSegmentControl()" title="Previous Segment">
                   <i class="fas fa-arrow-left"></i> Prev
                 </button>
@@ -150,17 +162,17 @@
                 </button>
               </div>
             </div>
-            <div class="control-group" data-tippy-content="Select content text color" style="flex: 1;">
+            <div class="control-group" data-tippy-content="Select content text color">
               <label for="lyricsTextFontColor">Font Color</label>
-              <input type="color" id="lyricsTextFontColor" value="#ffffff">
+              <input type="color" id="lyricsTextFontColor" value="#ffffff" class="color-input">
             </div>
-            <div class="control-group" data-tippy-content="Select content background color" style="flex: 1;">
+            <div class="control-group" data-tippy-content="Select content background color">
               <label for="lyricsTextBgColor">Bg Color</label>
-              <input type="color" id="lyricsTextBgColor" value="#007bff">
+              <input type="color" id="lyricsTextBgColor" value="#007bff" class="color-input">
             </div>
-            <div class="control-group" data-tippy-content="Make content background transparent" style="flex: 1;">
+            <div class="control-group" data-tippy-content="Make content background transparent">
               <label for="lyricsTextBgTransparent">Transparent</label>
-              <input type="checkbox" id="lyricsTextBgTransparent">
+              <input type="checkbox" id="lyricsTextBgTransparent" class="checkbox-input">
             </div>
           </div>
         </div>
@@ -312,26 +324,25 @@
         </div>
 
         <!-- Lyrics Modal -->
-        <div id="modalBackdrop" class="modal-backdrop"></div>
         <div id="lyricsModal" class="modal">
           <div class="modal-header">
             <h3>Manage Songs & Segments</h3>
-            <button class="modal-close" onclick="closeLyricsModal(false)">✕</button>
+            <button class="modal-close" onclick="closeLyricsModal(false)" title="Close modal">✕</button>
           </div>
-          <div class="control-group" style="margin-bottom: 12px;">
+          <div class="control-group">
             <label for="modalSongSelect">Select Song</label>
-            <select id="modalSongSelect" onchange="selectSongInModal(this.value)" class="parallelogram-bg">
+            <select id="modalSongSelect" onchange="selectSongInModal(this.value)" class="select-input parallelogram-bg">
               <option value="">Select a Song</option>
             </select>
           </div>
-          <div class="control-group" style="margin-bottom: 12px;">
+          <div class="control-group">
             <label for="modalSongTitle">Song Title</label>
-            <input type="text" id="modalSongTitle" placeholder="Enter song title" maxlength="50">
+            <input type="text" id="modalSongTitle" placeholder="Enter song title" maxlength="50" class="text-input">
           </div>
           <div id="segmentList" class="segment-list"></div>
-          <div class="segment-controls" style="margin-bottom: 12px;">
-            <button onclick="addSegment()">Add Segment</button>
-            <button onclick="newSong()">New Song</button>
+          <div class="segment-controls">
+            <button onclick="addSegment()" title="Add new segment">Add Segment</button>
+            <button onclick="newSong()" title="Create new song">New Song</button>
           </div>
           <div class="modal-footer">
             <div class="segment-controls">
@@ -342,15 +353,15 @@
                 <i class="fas fa-arrow-right"></i> Next
               </button>
             </div>
-            <button onclick="closeLyricsModal(true)">Apply</button>
+            <button onclick="closeLyricsModal(true)" title="Apply changes">Apply</button>
           </div>
         </div>
         <div id="modalBackdrop" class="modal-backdrop" onclick="closeLyricsModal(false)"></div>
       </div>
-      <div id="resizeHandle"></div>
+      <div id="resizeHandle" role="separator" aria-label="Resize controls"></div>
       <div id="preview">
         <div id="outputCanvas">
-          <div class="live-indicator">LIVE</div>
+          <div class="live-indicator" aria-hidden="true">LIVE</div>
         </div>
       </div>
     </div>
@@ -359,5 +370,5 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="config.js"></script>
   <script src="script.js"></script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'934096beb933c761',t:'MTc0NTI3NzM4My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

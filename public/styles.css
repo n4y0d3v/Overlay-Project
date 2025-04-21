@@ -86,6 +86,68 @@ body.dark-mode .segment-item textarea {
   border: 1px solid #555;
 }
 
+/* Add dark mode styles for the preview area */
+body.dark-mode #preview {
+  background: #2c2c2c;
+}
+
+body.dark-mode #outputCanvas {
+  background: #1a1a1a;
+  border: 2px solid #444;
+}
+
+/* Ensure buttons and inputs in dark mode have consistent styling */
+body.dark-mode button {
+  background: #007bff;
+  color: #fff;
+}
+
+body.dark-mode button:hover {
+  background: #0056b3;
+}
+
+body.dark-mode .text-input,
+body.dark-mode .number-input,
+body.dark-mode .select-input,
+body.dark-mode .large-text {
+  background: #444;
+  color: #e0e0e0;
+  border: 1px solid #555;
+}
+
+body.dark-mode .text-input:focus,
+body.dark-mode .number-input:focus,
+body.dark-mode .select-input:focus,
+body.dark-mode .large-text:focus {
+  border-color: #66b0ff;
+}
+
+body.dark-mode #resizeHandle {
+  background: #444;
+}
+
+body.dark-mode #resizeHandle:hover {
+  background: #666;
+}
+
+body.dark-mode .overlay-section {
+  border-bottom: 1px solid #444;
+}
+
+/* Ensure the live indicator remains visible in dark mode */
+body.dark-mode .live-indicator {
+  background: #ff0000;
+  color: #fff;
+}
+
+body.dark-mode #controlsContainer::-webkit-scrollbar-thumb {
+  background: #666;
+}
+
+body.dark-mode #controlsContainer::-webkit-scrollbar-track {
+  background: #2c2c2c;
+}
+
 .container {
   background: #fff;
   width: 100vw;
@@ -721,6 +783,19 @@ input.parallelogram-bg:focus, input.rectangle-bg:focus, textarea.rectangle-bg:fo
 
   #resizeHandle {
     display: none;
+  }
+
+  #controlsContainer::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  #controlsContainer::-webkit-scrollbar-thumb {
+    background: #adb5bd;
+    border-radius: 3px;
+  }
+
+  #controlsContainer::-webkit-scrollbar-track {
+    background: #f8f9fa;
   }
 
   .control-group {
